@@ -15,10 +15,6 @@ from siibra_mriwarp.config import *
 from siibra_mriwarp.exceptions import *
 from siibra_mriwarp.logic import Logic
 
-# TODO show deformation field --> in Slicer check "Output displacement field" under "Settings" and see console output
-# TODO logging
-# TODO write documentation
-
 
 class App(tk.Tk):
     """GUI window"""
@@ -191,7 +187,7 @@ class App(tk.Tk):
 
         # help icon
         tk.Button(side_panel, bg=siibra_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'siibra-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
+            'https://siibra-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
 
     def __set_mni(self, value):
         if value == "yes":
