@@ -61,7 +61,7 @@ Delete `siibra-mriwarp` from the installation directory. If you wish to delete t
 
 ## Usage and Help
 
-Visit [mriwarp.readthedocs.io](https://mriwarp.readthedocs.io) or contact [support@ebrains.eu](mailto:support@ebrains.eu?subject=[siibra-mriwarp]).
+Visit [siibra-mriwarp.readthedocs.io](https://siibra-mriwarp.readthedocs.io) or contact [support@ebrains.eu](mailto:support@ebrains.eu?subject=[siibra-mriwarp]).
 
 ## Authors
 

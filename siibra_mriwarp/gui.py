@@ -58,7 +58,7 @@ class App(tk.Tk):
         tk.Label(self, image=logo, bg=siibra_bg).pack()
 
         # some information
-        tk.Label(self, text='For details see mriwarp.readthedocs.io', bg=siibra_bg,
+        tk.Label(self, text='For details see siibra-mriwarp.readthedocs.io', bg=siibra_bg,
                  fg='white', font=font_12).pack(padx=10, pady=5)
         tk.Label(self, text="Loading siibra components. This may take a few minutes.",
                  bg=siibra_bg, fg=siibra_fg).pack(padx=10, pady=5)
@@ -191,7 +191,7 @@ class App(tk.Tk):
 
         # help icon
         tk.Button(side_panel, bg=siibra_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
+            'siibra-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
 
     def __set_mni(self, value):
         if value == "yes":
