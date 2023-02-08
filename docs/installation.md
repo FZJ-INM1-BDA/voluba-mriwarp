@@ -43,6 +43,9 @@ Run `Uninstall` from the installation directory or the `siibra-mriwarp` folder i
         :::bash
         python3 start_app.py
 
+!!! warning
+    If you run _siibra-mriwarp_ via Python on Windows, you need to change all `"/"` in `HD_BET.utils.maybe_mkdir_p` to `"\\"`.
+
 ### Uninstall siibra-mriwarp
 
 Delete `siibra-mriwarp` from the installation directory. If you wish to delete the default output folder, delete `siibra-mriwarp` from your home directory. Note that this may remove warping results.

@@ -12,7 +12,7 @@ In this tutorial, you will warp an example MRI scan to ICBM MNI152 2009c nonline
 
 <h1>Video tutorial</h1>
 
-<video style="height: 30.5vw" controls="">
+<video style="height: 20.5vw" controls="">
     <source src="../gifs/mriwarp_demo.mp4" type="video/mp4">
 </video>
 <br>

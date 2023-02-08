@@ -119,11 +119,14 @@ class Logic:
         self.__numpy_source *= 255.0/self.__numpy_source.max()
 
     def preload(self):
-        """Preload siibra and its components to speed up region assignment."""
+        """Preload HD_BET parameters, siibra and its components to speed up region assignment."""
         import siibra
+        from HD_BET.utils import maybe_download_parameters
 
         siibra.parcellations['julich 2.9'].get_map(
             'mni152', maptype='continuous')
+        maybe_download_parameters(0)
+
 
     def get_in_path(self):
         """Return the path to the input NIfTI."""
