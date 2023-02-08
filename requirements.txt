@@ -1,0 +1,4 @@
+siibra==0.3a27
+tkfontawesome==0.2.0
+git+https://github.com/MIC-DKFZ/HD-BET.git#egg=HD-BET
+git+https://github.com/xgui3783/siibra-explorer-toolsuite.git#egg=siibra-explorer-toolsuite

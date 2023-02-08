@@ -1,0 +1,42 @@
+site_name: siibra-mriwarp User Documentation
+
+repo_url: 'https://github.com/FZJ-INM1-BDA/siibra-mriwarp'
+repo_name: 'GitHub'
+
+copyright: '© 2023, Forschungszentrum Juelich GmbH'
+
+theme:
+  name: readthedocs
+  logo: 'images/siibra-mriwarp.png'
+
+extra_css:
+  - extra.css
+
+docs_dir: docs
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - fontawesome_markdown
+  - footnotes
+  - codehilite:
+      use_pygments: False
+  - codehilite:
+      use_pygments: False
+
+plugins:
+  - mkdocs-video:
+      is_video: True
+      css_style:
+        height: "30.5vw"
+
+nav:
+  - About siibra-mriwarp: 'index.md'
+  - 'installation.md'
+  - 'usage.md'
+  - 'acknowledgement.md'
+  - Tutorials:
+      - 'tutorial.md'
+  - Contact us:
+      - Support: 'mailto:support@ebrains.eu?subject=[siibra-mriwarp] '
+      - GitHub: 'https://github.com/FZJ-INM1-BDA/siibra-mriwarp/issues'
