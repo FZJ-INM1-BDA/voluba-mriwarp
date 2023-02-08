@@ -32,8 +32,6 @@ Hint: The default installation directory is `C:\Users\your_username\AppData\Loca
 
 ### Linux
 
-> **Warning: If you run _siibra-mriwarp_ via Python on Windows, you need to change all `"/"` in `HD_BET.utils.maybe_mkdir_p` to `"\\"`.**
-
 #### Requirements
 
 * Python 3.8 or higher
@@ -54,6 +52,8 @@ Hint: The default installation directory is `C:\Users\your_username\AppData\Loca
 5. Run _siibra-mriwarp_:
 
         python3 start_app.py
+        
+> **Warning: If you run _siibra-mriwarp_ via Python on Windows, you need to change all `"/"` in `HD_BET.utils.maybe_mkdir_p` to `"\\"`.**
 
 #### Uninstall siibra-mriwarp
 
