@@ -42,11 +42,11 @@ Hint: The default installation directory is `C:\Users\your_username\AppData\Loca
 1. Install all requirements.
 2. Clone _siibra-mriwarp_ from GitHub:
 
-        git clone https://github.com/FZJ-INM1-BDA/siibra-toolbox-neuroimaging.git
+        git clone https://github.com/FZJ-INM1-BDA/siibra-mriwarp.git
 
 3. Install all Python requirements with pip:
 
-        cd siibra-toolbox-neuroimaging/siibra-mriwarp
+        cd siibra-mriwarp
         pip install -r requirements.txt
 
 4. Run _siibra-mriwarp_:
@@ -64,11 +64,6 @@ Visit [mriwarp.readthedocs.io](https://mriwarp.readthedocs.io) or contact [suppo
 ## Authors
 
 [Big Data Analytics Group](https://fz-juelich.de/en/inm/inm-1/research/big-data-analytics), Institute of Neuroscience and Medicine (INM-1), Forschungszentrum Jülich GmbH
-
-## Version History
-
-* 0.1
-    * Initial Release
 
 ## License
 
