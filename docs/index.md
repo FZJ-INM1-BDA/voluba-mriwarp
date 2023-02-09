@@ -2,7 +2,7 @@
 
 > **Note: _siibra-mriwarp_ is still in development. You may still encounter bugs when using it.**
 
-_siibra-mriwarp_ is a Windows application that warps a whole brain MRI scan of an individual subject to [ICBM MNI152 2009c nonlinear asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009). Furthermore, it allows probabilistic region assignment of a selected point to brain regions of [Julich Brain Atlas](https://julich-brain-atlas.de/).
+_siibra-mriwarp_ is an application that warps a whole brain MRI scan of an individual subject to [ICBM MNI152 2009c nonlinear asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009). Furthermore, it allows probabilistic region assignment of a selected point to brain regions of [Julich Brain Atlas](https://julich-brain-atlas.de/).
 
 Warping brain data to a standardized space like MNI152 enables anchoring to atlas volumes like [BigBrain](https://julich-brain-atlas.de/atlas/bigbrain). However, reasonable registration requires various steps that need a lot of optimization effort. _siibra_mriwarp_ aims to simplify the workflow of warping a patient's MRI scan to MNI152 space. With this application, you avoid installing multiple tools and tweaking many parameters for a proper registration result. Instead, _siibra-mriwarp_ is an easy-to-install and easy-to-use tool combining all necessary steps into one pipeline. 
 
