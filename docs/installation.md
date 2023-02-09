@@ -36,6 +36,7 @@ Run `Uninstall` from the installation directory or the `siibra-mriwarp` folder i
 
         :::bash
         cd siibra-mriwarp
+        pip install scikit-build
         pip install -r requirements.txt
 
 4. Run _siibra-mriwarp_:

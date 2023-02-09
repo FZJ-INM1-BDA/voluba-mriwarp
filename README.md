@@ -47,6 +47,7 @@ Hint: The default installation directory is `C:\Users\your_username\AppData\Loca
 3. Install all Python requirements with pip:
 
         cd siibra-mriwarp
+        pip install scikit-build
         pip install -r requirements.txt
 
 5. Run _siibra-mriwarp_:
