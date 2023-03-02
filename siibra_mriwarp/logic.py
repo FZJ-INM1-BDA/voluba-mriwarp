@@ -215,8 +215,9 @@ class Logic:
                        '5x3x2x1x0vox', '--shrink-factors', '10x6x4x2x1', '--use-estimate-learning-rate-once']
 
         try:
-            subprocess.run(command, stdout=subprocess.PIPE,
+            result = subprocess.run(command, stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE, check=True, shell=True)
+            print(result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
             raise SubprocessFailedError(e.output)
 
@@ -250,10 +251,10 @@ class Logic:
 
         # In ANTs points are transformed from moving to fixed using the inverse transformation.
         try:
-            subprocess.run(command, stdout=subprocess.PIPE,
+            result = subprocess.run(command, stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE, check=True, shell=True)
+            print(result.stdout)
         except subprocess.CalledProcessError as e:
-            print(str(e.output))
             raise SubprocessFailedError(e.output)
 
         target_pts = pd.read_csv(
