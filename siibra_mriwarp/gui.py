@@ -1,3 +1,4 @@
+import logging
 import platform
 import threading
 import time
@@ -302,6 +303,8 @@ class App(tk.Tk):
             self.logic.set_in_path(self.__open_file_path.get())
             self.logic.set_out_path(self.__open_folder_path.get())
         except Exception as e:
+            logging.getLogger(mriwarp_name).error(
+                f'Error during in/out path definition: {str(e)}')
             messagebox.showerror('Error', str(e))
             return
 
@@ -321,13 +324,14 @@ class App(tk.Tk):
 
     def __run_warping(self):
         """Warp the input NIfTI to MNI152 space with initial skull stripping."""
-        print('Performing skull stripping')
+        logger = logging.getLogger(mriwarp_name)
+        logger.info('Performing skull stripping')
         try:
             self.logic.strip_skull()
         except Exception as e:
             self.__show_error('skull stripping', e)
             return
-        print('Performing registration')
+        logger.info('Performing registration')
         try:
             self.logic.register()
         except Exception as e:
@@ -335,7 +339,7 @@ class App(tk.Tk):
             return
         self.__progress_bar.stop()
         self.__progress_bar.destroy()
-        print('Finished')
+        logger.info('Finished')
         self.__warp_button.grid()
         # Show a green check mark when the warping was successful.
         self.__check_mark = tk.Label(
@@ -344,7 +348,6 @@ class App(tk.Tk):
         # Retry the region assignment for the currently selected point when warping finishes.
         if self.__annotation != [-1, -1, -1]:
             self.set_annotation()
-        
 
     def __show_error(self, stage, error):
         """Stop the warping and show the error that occurred.
@@ -359,6 +362,8 @@ class App(tk.Tk):
         self.__check_mark = tk.Label(
             self.__warping_frame, bg=siibra_highlight_bg, image=self.__error_icon)
         self.__check_mark.grid(column=2, row=3, pady=5)
+        logging.getLogger(mriwarp_name).error(
+            f'Error during {stage}: {str(error)}')
         messagebox.showerror('Error',
                              f'The following error occurred during {stage}:\n\n{str(error)}\n\n'
                              f'If you need help, please contact support@ebrains.eu.')
@@ -373,7 +378,8 @@ class App(tk.Tk):
 
     def set_annotation(self):
         """Set the annotation and start the region assignment."""
-        type = 'template' if self.logic.get_in_path() == mni_template else 'aligned' if self.__check.get() == 'yes' else 'unaligned'
+        type = 'template' if self.logic.get_in_path(
+        ) == mni_template else 'aligned' if self.__check.get() == 'yes' else 'unaligned'
         self.logic.set_img_type(type)
         self.__annotation = self.__coronal_view.get_annotation()
         # The origin in the viewer is upper left but the image origin is lower left.
@@ -444,6 +450,8 @@ class App(tk.Tk):
             source, target, probabilities = self.logic.get_regions(
                 self.__annotation)
         except SubprocessFailedError as e:
+            logging.getLogger(mriwarp_name).error(
+                f'Error during region calculation: {str(e)}')
             messagebox.showerror('Error', f'The following error occurred during region calculation:\n\n{str(e)}\n\n'
                                           f'If you need help, please contact support@ebrains.eu.')
             # No region can be found when an error occurs
@@ -453,6 +461,8 @@ class App(tk.Tk):
             self.__calculating = False
             return
         except PointNotFoundError:
+            logging.getLogger(mriwarp_name).error(
+                f'{self.__annotation} outside MNI152 space.')
             # The point is outside the brain.
             tk.Label(self.__region_frame, anchor='w', bg='red', borderwidth=10, fg='black',
                      font=font_10_b, text='Point outside MNI152 space').pack(anchor='n', fill='x',
