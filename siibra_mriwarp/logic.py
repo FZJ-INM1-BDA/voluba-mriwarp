@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import subprocess
@@ -8,6 +9,7 @@ import numpy as np
 import pandas as pd
 from HD_BET.run import run_hd_bet
 
+from siibra_mriwarp.config import mriwarp_name
 from siibra_mriwarp.exceptions import *
 
 
@@ -127,7 +129,6 @@ class Logic:
             'mni152', maptype='continuous')
         maybe_download_parameters(0)
 
-
     def get_in_path(self):
         """Return the path to the input NIfTI."""
         return self.__in_path
@@ -216,8 +217,8 @@ class Logic:
 
         try:
             result = subprocess.run(command, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE, check=True, shell=True)
-            print(result.stdout.decode('utf-8'))
+                                    stderr=subprocess.PIPE, check=True, shell=True)
+            logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
             raise SubprocessFailedError(e.output)
 
@@ -252,8 +253,8 @@ class Logic:
         # In ANTs points are transformed from moving to fixed using the inverse transformation.
         try:
             result = subprocess.run(command, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE, check=True, shell=True)
-            print(result.stdout)
+                                    stderr=subprocess.PIPE, check=True, shell=True)
+            logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
             raise SubprocessFailedError(e.output)
 
