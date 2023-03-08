@@ -6,7 +6,7 @@ _siibra-mriwarp_ is designed as a [Windows](#fa-windows-windows-10-or-higher) ap
 
 ### Install siibra-mriwarp
 
-1. Download the installer [here](https://fz-juelich.sciebo.de/s/N9taLOGoE5MiSz8/download).
+1. Download the installer [here](https://fz-juelich.sciebo.de/s/xbjgb8yx7Jw01Jq/download).
 2. Run the installer.
 3. Run _siibra-mriwarp_ directly from the installer. Depending on the installation settings you have chosen, you can also run _siibra-mriwarp_ from the installation directory, the start menu or the desktop shortcut.
 
