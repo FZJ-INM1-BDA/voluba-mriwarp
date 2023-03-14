@@ -41,6 +41,8 @@ class App(tk.Tk):
         self.logic.set_in_path(mni_template)
         if not os.path.exists(mriwarp_home):
             os.mkdir(mriwarp_home)
+        if not os.path.exists(parameter_home):
+            os.mkdir(parameter_home)
         self.logic.set_out_path(mriwarp_home)
         self.__annotation = [-1, -1, -1]
 
@@ -57,7 +59,7 @@ class App(tk.Tk):
         # some information
         tk.Label(self, text='For details see siibra-mriwarp.readthedocs.io', bg=siibra_bg,
                  fg='white', font=font_12).pack(padx=10, pady=5)
-        tk.Label(self, text="Loading siibra components. This may take a few minutes.",
+        tk.Label(self, text='Loading siibra components. This may take a few minutes.',
                  bg=siibra_bg, fg=siibra_fg).pack(padx=10, pady=5)
 
         # Preload probability maps to speed up region assignment.
@@ -100,6 +102,10 @@ class App(tk.Tk):
             'external-link-alt', fill=siibra_fg, scale_to_width=15)
         self.__help_icon = icon_to_image(
             'question-circle', fill=siibra_fg, scale_to_width=20)
+        self.__caret_right = icon_to_image(
+            'caret-right', fill='white', scale_to_width=7)
+        self.__caret_down = icon_to_image(
+            'caret-down', fill='white', scale_to_width=11)
 
     def __create_viewpanel(self):
         """Create the frame for the NIfTI viewer."""
@@ -129,7 +135,7 @@ class App(tk.Tk):
                          sv=input_file: self.__track_input(sv))
         label = tk.Label(self.__warping_frame, bg=siibra_highlight_bg,
                          fg='white', text='Input NIfTI: ')
-        if platform.system() == "Linux":
+        if platform.system() == 'Linux':
             self.__open_file_path = tk.Entry(
                 self.__warping_frame, bd=0, textvariable=input_file, width=39)
         else:
@@ -145,7 +151,7 @@ class App(tk.Tk):
         tk.Label(self.__warping_frame, bg=siibra_highlight_bg, fg='white', justify='left',
                  text='Input already\nin MNI152:').grid(column=0, row=1, sticky='w', padx=5)
         self.__check = tk.StringVar()
-        ttk.OptionMenu(self.__warping_frame, self.__check, "", "no", "yes",
+        ttk.OptionMenu(self.__warping_frame, self.__check, '', 'no', 'yes',
                        command=self.__set_mni).grid(column=1, row=1, sticky='ew')
 
         # widgets for choosing the output folder
@@ -154,7 +160,7 @@ class App(tk.Tk):
                             sv=output_folder: self.__track_output(sv))
         label = tk.Label(self.__warping_frame, bg=siibra_highlight_bg,
                          fg='white', text='Output folder: ')
-        if platform.system() == "Linux":
+        if platform.system() == 'Linux':
             self.__open_folder_path = tk.Entry(
                 self.__warping_frame, bd=0, textvariable=output_folder, width=39)
         else:
@@ -167,10 +173,34 @@ class App(tk.Tk):
         self.__open_folder_path.grid(column=1, row=2, pady=5)
         open_folder_button.grid(column=2, row=2, padx=5, pady=5, sticky='e')
 
+        # widgets for advanced registration
+        self.__json_btn = tk.Button(
+            self.__warping_frame, bd=1, command=self.__change_advanced, text=' Advanced registration settings ', padx=2.5, bg=siibra_highlight_bg, fg='white', image=self.__caret_right, compound='left')
+        self.__json_btn.grid(column=0, row=3, columnspan=3, padx=5, sticky='we')
+        json_file = tk.StringVar()
+        label = tk.Label(self.__warping_frame, bg=siibra_highlight_bg,
+                 fg='white', text='Parameters: ')
+        label.grid(column=0, row=4, padx=5, pady=5, sticky='w')
+        if platform.system() == 'Linux':
+            self.__open_json_path = tk.Entry(
+                self.__warping_frame, bd=0, textvariable=json_file, width=39)
+        else:
+            self.__open_json_path = tk.Entry(
+                self.__warping_frame, bd=0, textvariable=json_file, width=57)
+        self.__open_json_path.insert(0, os.path.join(parameter_home, 'default.json'))
+        self.__open_json_path.grid(column=1, row=4, pady=5)
+        button = tk.Button(
+            self.__warping_frame, bd=0, command=self.__select_json, text='...', padx=2.5)
+        button.grid(column=2, row=4, padx=5, pady=5, sticky='e')
+        self.__json_widgets = [label, self.__open_json_path, button]
+        for w in self.__json_widgets:
+            w.grid_remove()
+        self.__json_showing = False
+
         # widgets for warping to MNI152
         self.__warp_button = tk.Button(self.__warping_frame, bd=0, command=self.__prepare_warping,
                                        text='Warp input to MNI152 space')
-        self.__warp_button.grid(column=1, row=3, pady=5)
+        self.__warp_button.grid(column=1, row=5, pady=10, sticky='we')
         self.__check_mark = None
 
         # frame for region assignment
@@ -190,8 +220,22 @@ class App(tk.Tk):
         tk.Button(side_panel, bg=siibra_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
             'https://siibra-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
 
+    def __change_advanced(self):
+        """Show/Hide selection for parameter JSON."""
+        if self.__json_showing:
+            self.__json_btn.config(image=self.__caret_right)
+            for w in self.__json_widgets:
+                w.grid_remove()
+            self.__json_showing = False
+        else:
+            self.__json_btn.config(image=self.__caret_down)
+            for w in self.__json_widgets:
+                w.grid()
+            self.__json_showing = True
+
     def __set_mni(self, value):
-        if value == "yes":
+        """TODO"""
+        if value == 'yes':
             self.__warp_button.grid_remove()
             if self.__check_mark:
                 self.__check_mark.grid_remove()
@@ -254,8 +298,8 @@ class App(tk.Tk):
             self.__coronal_slider.destroy()
 
             self.__create_viewer()
-            self.__check.set("no")
-            self.__set_mni("no")
+            self.__check.set('no')
+            self.__set_mni('no')
 
     def __track_output(self, variable):
         """Observe the Entry widget for the path to the output folder.
@@ -268,6 +312,22 @@ class App(tk.Tk):
             # Retry the region assignment for the currently selected point if the output folder changes.
             if self.__annotation != [-1, -1, -1]:
                 self.set_annotation()
+
+    def __select_json(self):
+        """Select a parameter JSON."""
+        # Open the latest given valid folder in the filedialog.
+        folder = '/'
+        if self.__open_json_path.get():
+            folder = os.path.dirname(self.__open_json_path.get())
+
+        filename = filedialog.askopenfilename(filetypes=[('JSON', '*.json')], initialdir=folder,
+                                              title='Select parameter JSON')
+
+        # Canceling the filedialog returns an empty string.
+        if filename:
+            self.__open_json_path.delete(0, tk.END)
+            filename = os.path.normpath(filename)
+        self.__open_json_path.insert(0, filename)
 
     def __select_file(self):
         """Select an input NIfTI."""
@@ -317,7 +377,7 @@ class App(tk.Tk):
 
         self.__progress_bar = ttk.Progressbar(self.__warping_frame, length=450, mode='indeterminate',
                                               orient='horizontal')
-        self.__progress_bar.grid(column=0, row=3, columnspan=3, padx=5, pady=5)
+        self.__progress_bar.grid(column=0, row=5, columnspan=3, padx=5, pady=10)
         self.__progress_bar.start()
 
         threading.Thread(target=self.__run_warping, daemon=True).start()
@@ -344,7 +404,7 @@ class App(tk.Tk):
         # Show a green check mark when the warping was successful.
         self.__check_mark = tk.Label(
             self.__warping_frame, bg=siibra_highlight_bg, image=self.__success_icon)
-        self.__check_mark.grid(column=2, row=3, pady=5)
+        self.__check_mark.grid(column=2, row=5, pady=5)
         # Retry the region assignment for the currently selected point when warping finishes.
         if self.__annotation != [-1, -1, -1]:
             self.set_annotation()
@@ -361,7 +421,7 @@ class App(tk.Tk):
         # Show a red cross when the warping was NOT successful.
         self.__check_mark = tk.Label(
             self.__warping_frame, bg=siibra_highlight_bg, image=self.__error_icon)
-        self.__check_mark.grid(column=2, row=3, pady=5)
+        self.__check_mark.grid(column=2, row=5, pady=5)
         logging.getLogger(mriwarp_name).error(
             f'Error during {stage}: {str(error)}')
         messagebox.showerror('Error',
