@@ -243,6 +243,20 @@ class Logic:
         moving = os.path.normpath(self.__reorient_path_calc)
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
+        
+        # Replacement of TRANSFORM and VOLUME is incorrect:
+        # nonlinear_C:\\Users\\jthoennissen\\siibra-mriwarp\\A00058952_rt_colin27_lin_head_n4_transformation
+        # nonlinear_C:\\Users\\jthoennissen\\siibra-mriwarp\\A00058952_rt_colin27_lin_head_n4_registered.nii.gz
+
+        # TODO: think about this: for region assignment, siibra-mriwarp will look for [name]_transformationInverseComposite.h5 
+        # --> wouldn't work if the user specified some other name or if it's .mat instead of .h5
+        # --> solution for .mat vs .h5 would be to always do write-composite-transform 1 which produces .h5 (?)
+
+        # Let the user always only use TRANSFORM and VOLUME without appending any prefixes or suffixes
+        # replace TRANSFORM with [out_path]/[command]_[name]_transform
+        # replace VOLUME with [out_path]/[command]_[name]_registered.nii.gz
+        # TODO above TODO wouldn't work again --> Idea: for the last registration command leave [command] out or copy it?
+
         transform = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_transformation'))
         volume = os.path.normpath(os.path.join(
