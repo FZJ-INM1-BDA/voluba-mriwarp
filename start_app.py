@@ -1,8 +1,8 @@
 import logging
 
-from siibra_mriwarp.config import mriwarp_name
-from siibra_mriwarp.gui import App
-from siibra_mriwarp.logging import setup_logger
+from voluba_mriwarp.config import mriwarp_name
+from voluba_mriwarp.gui import App
+from voluba_mriwarp.logging import setup_logger
 
 
 if __name__ == '__main__':

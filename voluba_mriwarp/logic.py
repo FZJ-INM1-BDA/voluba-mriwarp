@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from HD_BET.run import run_hd_bet
 
-from siibra_mriwarp.config import mriwarp_name
-from siibra_mriwarp.exceptions import *
+from voluba_mriwarp.config import mriwarp_name, mni_template
+from voluba_mriwarp.exceptions import *
 
 
 class Logic:
@@ -174,7 +174,7 @@ class Logic:
     def strip_skull(self):
         """Strip the skull of the input brain using HD-BET.
 
-        :raise siibra_mriwarp.SubprocessFailedError: if execution of HD-BET failed
+        :raise mriwarp.SubprocessFailedError: if execution of HD-BET failed
         """
         input = os.path.normpath(self.__reorient_path_calc)
         output = os.path.normpath(os.path.join(
@@ -189,9 +189,9 @@ class Logic:
     def register(self):
         """Register the stripped input brain to MNI152 space using ANTs
 
-        :raise siibra_mriwarp.SubprocessFailedError: if execution of antsRegistration failed
+        :raise mriwarp.SubprocessFailedError: if execution of antsRegistration failed
         """
-        fixed = 'data/MNI152_stripped.nii.gz'
+        fixed = mni_template
         moving = os.path.normpath(self.__reorient_path_calc)
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
@@ -230,7 +230,7 @@ class Logic:
 
         :param list source_coords_ras: coordinates in patient's physical space (RAS)
         :return list: warped coordinates in MNI152 space (RAS)
-        :raise siibra_mriwarp.SubprocessFailedError: if execution of antsApplyTransformsToPoints failed
+        :raise mriwarp.SubprocessFailedError: if execution of antsApplyTransformsToPoints failed
         """
         tmp_dir = tempfile.TemporaryDirectory()
 

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image, ImageTk
 
-from siibra_mriwarp.config import *
+from voluba_mriwarp.config import *
 
 
 class CanvasImage:

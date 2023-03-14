@@ -1,13 +1,13 @@
-site_name: siibra-mriwarp User Documentation
+site_name: voluba-mriwarp User Documentation
 
-repo_url: 'https://github.com/FZJ-INM1-BDA/siibra-mriwarp'
+repo_url: 'https://github.com/FZJ-INM1-BDA/voluba-mriwarp'
 repo_name: 'GitHub'
 
 copyright: '© 2023, Forschungszentrum Juelich GmbH'
 
 theme:
   name: readthedocs
-  logo: 'images/siibra-mriwarp.png'
+  logo: 'images/voluba-mriwarp.png'
 
 extra_css:
   - extra.css
@@ -23,12 +23,12 @@ markdown_extensions:
       use_pygments: False
 
 nav:
-  - About siibra-mriwarp: 'index.md'
+  - About voluba-mriwarp: 'index.md'
   - 'installation.md'
   - 'usage.md'
   - 'acknowledgement.md'
   - Tutorials:
       - 'tutorial.md'
   - Contact us:
-      - Support: 'mailto:support@ebrains.eu?subject=[siibra-mriwarp]'
-      - GitHub: 'https://github.com/FZJ-INM1-BDA/siibra-mriwarp/issues'
+      - Support: 'mailto:support@ebrains.eu?subject=[voluba-mriwarp]'
+      - GitHub: 'https://github.com/FZJ-INM1-BDA/voluba-mriwarp/issues'

@@ -1,13 +1,13 @@
 # Usage
 
-_siibra-mriwarp_ consists of two panels. The side panel on the left is for [warping](#warping) the input MRI scan to MNI152 space and displaying the results of the [probabilistic region assignment](#probabilistic-region-assignment). The [viewer](#viewer) on the right side is for displaying and inspecting the patient's MRI scan.
+_voluba-mriwarp_ consists of two panels. The side panel on the left is for [warping](#warping) the input MRI scan to MNI152 space and displaying the results of the [probabilistic region assignment](#probabilistic-region-assignment). The [viewer](#viewer) on the right side is for displaying and inspecting the patient's MRI scan.
 
 !!! info
-    When running _siibra-mriwarp_ for the first time, the startup may take a few minutes as siibra components need to be fetched.
+    When running _voluba-mriwarp_ for the first time, the startup may take a few minutes as siibra components need to be fetched.
 
 ## Quick start
 
-The general workflow for _siibra-mriwarp_ can be summarized as follows:
+The general workflow for _voluba-mriwarp_ can be summarized as follows:
 
 ![icon](images/1.png) Choose an **input MRI scan**.    
 ![icon](images/2.png) Choose an **output folder** for the warping results.  
@@ -20,7 +20,7 @@ The general workflow for _siibra-mriwarp_ can be summarized as follows:
 
 ## Warping a patient's brain to MNI152 space
 
-The goal of warping is to align an image in 3D space. In _siibra-mriwarp_, a nonlinear registration method automatically warps a patient's whole brain MRI scan to ICBM MNI152 2009c Nonlinear Asymmetric space. To perform warping in _siibra-mriwarp_ follow these steps:
+The goal of warping is to align an image in 3D space. In _voluba-mriwarp_, a nonlinear registration method automatically warps a patient's whole brain MRI scan to ICBM MNI152 2009c Nonlinear Asymmetric space. To perform warping in _voluba-mriwarp_ follow these steps:
 
 ![icon](images/1.png) **Select the input MRI scan to register.**  
 The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan from the file explorer by clicking <mark>...</mark>.
@@ -41,22 +41,22 @@ Click <mark>Warp input to MNI152 space</mark> to start the automatic nonlinear r
 
 ## Assigning regions to points in the patient's space
 
-_siibra-mriwarp_ allows you to make a probabilistic assignment of a point in the patient's space to brain regions. Probabilistic assignment means that at the given location values of different probability maps are retrieved from Julich Brain Cytoarchitectonic Maps 2.9. With the resulting list of regions, you get the most probable region assigned to your selected point.
+_voluba-mriwarp_ allows you to make a probabilistic assignment of a point in the patient's space to brain regions. Probabilistic assignment means that at the given location values of different probability maps are retrieved from Julich Brain Cytoarchitectonic Maps 2.9. With the resulting list of regions, you get the most probable region assigned to your selected point.
 
-To perform probabilistic region assignment in _siibra-mriwarp_ follow these steps:
+To perform probabilistic region assignment in _voluba-mriwarp_ follow these steps:
 
 ![icon](images/1.png) **Select the input MRI scan to inspect.**  
 The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan in the file explorer by clicking <mark>...</mark>.
 
 ![icon](images/2.png) **Choose the output folder containing the warping results.**  
-Probabilistic region assignment can only be performed if a transformation from the patient's to MNI152 space exists. If the chosen input MRI scan is already in MNI152 space, select **yes** for <mark>Input already in MNI152</mark>. In this case, no transformation is applied during region assignment as the patient's brain scan itself is already aligned. Otherwise, _siibra-mriwarp_ will search the matching transformation matrix `filename_transformationInverseComposite.h5` in the given <mark>Output folder</mark>. Please change the location to the folder where the warping results for the given <mark>Input NIfTI</mark> were written to. If there are no results to this MRI scan yet, you need to [warp the input](#warping) first.
+Probabilistic region assignment can only be performed if a transformation from the patient's to MNI152 space exists. If the chosen input MRI scan is already in MNI152 space, select **yes** for <mark>Input already in MNI152</mark>. In this case, no transformation is applied during region assignment as the patient's brain scan itself is already aligned. Otherwise, _voluba-mriwarp_ will search the matching transformation matrix `filename_transformationInverseComposite.h5` in the given <mark>Output folder</mark>. Please change the location to the folder where the warping results for the given <mark>Input NIfTI</mark> were written to. If there are no results to this MRI scan yet, you need to [warp the input](#warping) first.
 
 !!! hint
-    The default output directory is `C:\Users\your_username\siibra-mriwarp`.
+    The default output directory is `C:\Users\your_username\voluba-mriwarp`.
 
 
 ![icon](images/4.png) **Select a point in the viewer to assign a region to it**.  
-Double-click a point in the patient's scan in the [viewer](#viewer). _siibra-mriwarp_ will then assign regions to this point and display the results in the side panel on the left. The percentage tells you the probability of the cytoarchitectonic area occurring at the selected point.
+Double-click a point in the patient's scan in the [viewer](#viewer). _voluba-mriwarp_ will then assign regions to this point and display the results in the side panel on the left. The percentage tells you the probability of the cytoarchitectonic area occurring at the selected point.
 
 ![icon](images/5.png) **View more details about a specific region in _siibra-explorer_.**  
 Click <mark>:fa-external-link:</mark> to get more information about the brain region in [_siibra-explorer_](https://atlases.ebrains.eu/viewer/human). Explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.

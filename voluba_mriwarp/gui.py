@@ -11,10 +11,10 @@ from PIL import Image
 from PIL.ImageTk import PhotoImage
 from tkfontawesome import icon_to_image
 
-from siibra_mriwarp.canvas import View
-from siibra_mriwarp.config import *
-from siibra_mriwarp.exceptions import *
-from siibra_mriwarp.logic import Logic
+from voluba_mriwarp.canvas import View
+from voluba_mriwarp.config import *
+from voluba_mriwarp.exceptions import *
+from voluba_mriwarp.logic import Logic
 
 
 class App(tk.Tk):
@@ -25,7 +25,7 @@ class App(tk.Tk):
         super().__init__(className=mriwarp_name)
 
         self.title(mriwarp_name)
-        self.iconphoto(True, PhotoImage(Image.open(siibra_icon)))
+        self.iconphoto(True, PhotoImage(Image.open(mriwarp_icon)))
         # When the window is closed on_closing is called.
         self.protocol('WM_DELETE_WINDOW', self.on_closing)
 
@@ -55,7 +55,7 @@ class App(tk.Tk):
         tk.Label(self, image=logo, bg=siibra_bg).pack()
 
         # some information
-        tk.Label(self, text='For details see siibra-mriwarp.readthedocs.io', bg=siibra_bg,
+        tk.Label(self, text='For details see voluba-mriwarp.readthedocs.io', bg=siibra_bg,
                  fg='white', font=font_12).pack(padx=10, pady=5)
         tk.Label(self, text="Loading siibra components. This may take a few minutes.",
                  bg=siibra_bg, fg=siibra_fg).pack(padx=10, pady=5)
@@ -188,7 +188,7 @@ class App(tk.Tk):
 
         # help icon
         tk.Button(side_panel, bg=siibra_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'https://siibra-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
+            'https://voluba-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
 
     def __set_mni(self, value):
         if value == "yes":

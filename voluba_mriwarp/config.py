@@ -1,6 +1,6 @@
 import os
 
-mriwarp_name = 'siibra-mriwarp'
+mriwarp_name = 'voluba-mriwarp'
 mriwarp_home = os.path.normpath(os.path.expanduser(f'~/{mriwarp_name}'))
 mni_template = os.path.normpath('./data/MNI152_stripped.nii.gz')
 
@@ -11,8 +11,8 @@ siibra_fg = '#c4c4c4'
 warp_bg = 'black'
 
 # logos
-siibra_icon = './data/siibra.ico'
-mriwarp_logo_inv = './data/siibra-mriwarp-inv.png'
+mriwarp_icon = f'./data/{mriwarp_name}.ico'
+mriwarp_logo_inv = f'./data/{mriwarp_name}-inv.png'
 hbp_ebrains_color = './data/hbp_ebrains_color.png'
 
 # fonts
