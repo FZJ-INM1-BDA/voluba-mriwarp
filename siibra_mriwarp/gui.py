@@ -362,9 +362,10 @@ class App(tk.Tk):
         try:
             self.logic.set_in_path(self.__open_file_path.get())
             self.logic.set_out_path(self.__open_folder_path.get())
+            self.logic.set_json_path(self.__open_json_path.get())
         except Exception as e:
             logging.getLogger(mriwarp_name).error(
-                f'Error during in/out path definition: {str(e)}')
+                f'Error during path definition: {str(e)}')
             messagebox.showerror('Error', str(e))
             return
 

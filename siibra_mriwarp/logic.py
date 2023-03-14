@@ -3,6 +3,7 @@ import os
 import platform
 import subprocess
 import tempfile
+import json
 
 import nibabel as nib
 import numpy as np
@@ -25,6 +26,7 @@ class Logic:
         self.__nifti_source = None
         self.__numpy_source = None
         self.__img_type = ''
+        self.__parameters = None
         self.__error = ''
 
     def check_in_path(self, in_path):
@@ -80,6 +82,52 @@ class Logic:
             self.load_source()
         else:
             raise ValueError(self.__error)
+        
+    def set_json_path(self, json_path):
+        """Set the path to the parameter JSON.
+        
+        :param str json_path: path to the parameter JSON
+        :raise ValueError: if path or JSON is not valid
+        """
+        if self.check_json_path(json_path):
+            parameters = json.load(open(json_path, 'r'))
+            if self.check_json(parameters):
+                self.__parameters = parameters
+        else:
+            raise ValueError(self.__error)
+
+    def check_json_path(self, json_path):
+        """Check if the JSON path is valid.
+
+        :param str json_path: path to the parameter JSON
+        :return bool: True if valid, False otherwise.
+        """
+        self.__error = ''
+
+        if not json_path:
+            self.__error += f'Please enter a parameter location.\n'
+        elif not os.path.exists(json_path):
+            self.__error += f'{json_path} could not be found.\n'
+        elif not os.path.isfile(json_path) or not json_path.endswith('.json'):
+            self.__error += f'{json_path} is not a JSON file.\n'
+
+        if self.__error:
+            return False
+        else:
+            return True
+
+    def check_json(self, parameters):
+        """Check if the JSON is valid.
+
+        :param str parameters: parameters from the JSON
+        :return bool: True if valid, False otherwise.
+        """
+        for value in parameters.values():
+            if not type(value) == dict:
+                return False
+            if not 'stages' in value.keys():
+                return False
+        return True
 
     def __set_transform_path(self):
         """Set the path to the transform matrix."""
@@ -153,7 +201,7 @@ class Logic:
         """Set the image type.
 
         :param str type: type of the image (template, aligned or unaligned)
-        :raise ValueError: if path is not vali
+        :raise ValueError: if path is not valid
         """
         if type not in ['template', 'aligned', 'unaligned']:
             raise ValueError(
@@ -199,28 +247,45 @@ class Logic:
             self.__out_path_calc, f'{self.__name_calc}_transformation'))
         volume = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
+         
+        commands = []
+        for command in self.__parameters.keys():
+            cmd = 'antsRegistration '
+            for param in self.__parameters[command].keys():
+                if param == 'stages':
+                    # transformation stage parameters
+                    for stage in self.__parameters[command][param]:
+                        for stage_param in stage.keys():
+                            cmd += f'--{stage_param} {stage[stage_param]} '
+                else:
+                    # simple parameters
+                    cmd += f'--{param} {self.__parameters[command][param]} '
+
+            # replace placeholders with actual files
+            cmd = cmd.replace('FIXED', fixed)
+            cmd = cmd.replace('MOVING', moving)
+            cmd = cmd.replace('MASK', mask)
+            cmd = cmd.replace('TRANSFORM', transform)
+            cmd = cmd.replace('VOLUME', volume)
+
+            commands.append(cmd.rstrip())
 
         if platform.system() == 'Linux':
-            command = [f'antsRegistration --verbose 1 --dimensionality 3 --use-histogram-matching 0 --winsorize-image-intensities [0.005,0.995] --masks [NULL,{mask}] --float --interpolation Linear --output [{transform},{volume}] --write-composite-transform 1 --collapse-output-transforms 1 --transform Rigid[0.1] --metric MI[{fixed},{moving},1,32,Regular,0.25] --convergence [1000x500x250x0,1e-6,10] --smoothing-sigmas 4x3x2x1vox --shrink-factors 12x8x4x2 --transform Affine[0.1] --metric MI[{fixed},{moving},1,32,Regular,0.25] --convergence [1000x500x250x0,1e-6,10] --smoothing-sigmas 4x3x2x1vox --shrink-factors 12x8x4x2 --transform SyN[0.1,3,0] --metric MI[{fixed},{moving},1,32] --convergence [100x100x70x50x0,1e-6,10] --smoothing-sigmas 5x3x2x1x0vox --shrink-factors 10x6x4x2x1']
+            for i in range(len(commands)):
+                commands[i] = [commands[i]]    
         else:
-            command = ['antsRegistration', '--verbose', '1', '--dimensionality', '3', '--use-histogram-matching', '0',
-                       '--winsorize-image-intensities', '[0.005,0.995]', '--masks', f'[NULL,{mask}]', '--float', '--interpolation', 'Linear', '--output',
-                       f'[{transform},{volume}]', '--write-composite-transform', '1', '--collapse-output-transforms', '1',
-                       '--transform', 'Rigid[0.1]', '--metric', f'MI[{fixed},{moving},1,32,Regular,0.25]',
-                       '--convergence', '[1000x500x250x0,1e-6,10]', '--smoothing-sigmas', '4x3x2x1vox', '--shrink-factors',
-                       '12x8x4x2', '--use-estimate-learning-rate-once', '--transform', 'Affine[0.1]', '--metric',
-                       f'MI[{fixed},{moving},1,32,Regular,0.25]', '--convergence', '[1000x500x250x0,1e-6,10]',
-                       '--smoothing-sigmas', '4x3x2x1vox', '--shrink-factors', '12x8x4x2',
-                       '--use-estimate-learning-rate-once', '--transform', 'SyN[0.1,3,0]', '--metric',
-                       f'MI[{fixed},{moving},1,32]', '--convergence', '[100x100x70x50x0,1e-6,10]', '--smoothing-sigmas',
-                       '5x3x2x1x0vox', '--shrink-factors', '10x6x4x2x1', '--use-estimate-learning-rate-once']
+            for i in range(len(commands)):
+                commands[i] = commands[i].split(' ')
 
         try:
-            result = subprocess.run(command, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE, check=True, shell=True)
-            logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
+            for command in commands:
+                logging.getLogger(mriwarp_name).info(f'Executing: {command}')
+                result = subprocess.run(command, stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE, check=True, shell=True)
+                logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
-            raise SubprocessFailedError(e.output)
+            logging.getLogger(mriwarp_name).error(e.output.decode('utf-8').split('ERROR: ')[0].rstrip())
+            raise SubprocessFailedError(e.output.decode('utf-8').split('ERROR: ')[-1].rstrip())
 
         if self.__in_path == self.__in_path_calc and self.__out_path == self.__out_path_calc:
             self.__transform_path = transform+'InverseComposite.h5'
@@ -256,7 +321,8 @@ class Logic:
                                     stderr=subprocess.PIPE, check=True, shell=True)
             logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
-            raise SubprocessFailedError(e.output)
+            logging.getLogger(mriwarp_name).error(e.output.decode('utf-8').split('ERROR: ')[0].rstrip())
+            raise SubprocessFailedError(e.output.decode('utf-8').rstrip())
 
         target_pts = pd.read_csv(
             f'{os.path.join(tmp_dir.name, "target_pts.csv")}')
