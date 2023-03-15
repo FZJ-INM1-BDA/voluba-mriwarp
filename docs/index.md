@@ -2,7 +2,7 @@
 
 > **Note: _voluba-mriwarp_ is still in development. You may still encounter bugs when using it.**
 
-VoluBA offers tools to connect data to multilevel atlases and in this way makes it accessible for analysis with the siibra toolsuite.
+VoluBA (**Volu**metric **B**rain **A**nchoring) offers tools to connect volumetric imaging data to multilevel atlases and in this way makes it accessible for analysis with the siibra toolsuite.
 
 _voluba-mriwarp_ is a desktop application that integrates whole brain T1-weighted MRI scans into the anatomical context of the [Julich Brain Atlas](https://julich-brain-atlas.de/). It incorporates all required components like skull stripping, registration to [ICBM MNI152 2009c nonlinear asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009), and detailed analysis with the siibra toolsuite. The corresponding functionalities are provided via open-source tools like [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1], [ANTs](http://stnava.github.io/ANTs/) and [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python). _voluba-mriwarp_ is primarily designed for Windows 10 but can also be executed on Linux.
 
