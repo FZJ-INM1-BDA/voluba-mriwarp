@@ -13,7 +13,7 @@ Warping brain data to a standardized space like MNI152 enables anchoring of whol
 <p>We designed <em>voluba-mriwarp</em> as a desktop application. Therefore, the input MRI dataset will not be uploaded to any online services. It remains only on your local computer.</p>
 </div>
 
-_voluba-mriwarp_ applies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively assign brain regions to a point in the input space. Select a location in the displayed brain of a subject to perform a probabilistic assignment using Julich-Brain Cytoarchitectonic Maps 2.9. Hence, you can estimate the probability of a brain region occurring at the selected point. To explore even more information about a cytoarchitectonic area, you can access [_siibra-explorer_](https://atlases.ebrains.eu/viewer/human) through the application.
+_voluba-mriwarp_ applies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively assign brain regions to a point in the input space. Select a location in the displayed brain of a subject to perform a probabilistic assignment using Julich-Brain Cytoarchitectonic Maps 2.9. Hence, you can estimate the probability of a brain region occurring at the selected point. To explore even more information about a cytoarchitectonic area, you can access [siibra-explorer](https://atlases.ebrains.eu/viewer/human) through the application.
 
 ![image](images/teaser.png)
 

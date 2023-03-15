@@ -13,7 +13,7 @@ The general workflow for _voluba-mriwarp_ can be summarized as follows:
 ![icon](images/2.png) Choose an **output folder** for the warping results.  
 ![icon](images/3.png) **Warp** the input MRI to MNI152 space.  
 ![icon](images/4.png) **Select a point** in the viewer via double-click to assign a region to it.  
-![icon](images/5.png) View more details about a specific region in **_siibra-explorer_.**
+![icon](images/5.png) View more details about a specific region in **siibra-explorer**.
 
 ![image](images/workflow.png)
 
@@ -58,8 +58,8 @@ Probabilistic region assignment can only be performed if a transformation from t
 ![icon](images/4.png) **Select a point in the viewer to assign a region to it**.  
 Double-click a point in the input scan in the [viewer](#viewer). _voluba-mriwarp_ will then assign regions to this point and display the results in the side panel on the left. The percentage tells you the probability of the cytoarchitectonic area occurring at the selected point.
 
-![icon](images/5.png) **View more details about a specific region in _siibra-explorer_.**  
-Click <mark>:fa-external-link:</mark> to get more information about the brain region in [_siibra-explorer_](https://atlases.ebrains.eu/viewer/human). Explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.
+![icon](images/5.png) **View more details about a specific region in siibra-explorer.**  
+Click <mark>:fa-external-link:</mark> to get more information about the brain region in [siibra-explorer](https://atlases.ebrains.eu/viewer/human). Explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.
 
 ## Viewing a input brain
 
