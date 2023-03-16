@@ -3,7 +3,7 @@ import os
 import sys
 import tempfile
 
-from siibra_mriwarp.config import mriwarp_name
+from voluba_mriwarp.config import mriwarp_name
 
 
 class Logger():
