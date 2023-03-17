@@ -31,4 +31,4 @@ nav:
       - 'tutorial.md'
   - Contact us:
       - Support: 'mailto:support@ebrains.eu?subject=[voluba-mriwarp]'
-      - GitHub: 'https://github.com/FZJ-INM1-BDA/voluba-mriwarp/issues'
+      - GitHub Issues: 'https://github.com/FZJ-INM1-BDA/voluba-mriwarp/issues'

@@ -23,7 +23,7 @@ The general workflow for _voluba-mriwarp_ can be summarized as follows:
 The goal of warping is to align an image in 3D space. In _voluba-mriwarp_, a nonlinear registration method automatically warps a whole brain MRI scan to ICBM MNI152 2009c Nonlinear Asymmetric space. To perform warping in _voluba-mriwarp_ follow these steps:
 
 ![icon](images/1.png) **Select the input MRI scan to register.**  
-The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan from the file explorer by clicking <mark>...</mark>.
+The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and has to contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan from the file explorer by clicking <mark>...</mark>.
 
 
 ![icon](images/2.png) **Choose an output folder for the warping results.**  
@@ -46,7 +46,7 @@ _voluba-mriwarp_ allows you to make a probabilistic assignment of a point in the
 To perform probabilistic region assignment in _voluba-mriwarp_ follow these steps:
 
 ![icon](images/1.png) **Select the input MRI scan to inspect.**  
-The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan in the file explorer by clicking <mark>...</mark>.
+The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and has to contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan in the file explorer by clicking <mark>...</mark>.
 
 ![icon](images/2.png) **Choose the output folder containing the warping results.**  
 Probabilistic region assignment can only be performed if a transformation from the input to MNI152 space exists. If the chosen input MRI scan is already in MNI152 space, select **yes** for <mark>Input already in MNI152</mark>. In this case, no transformation is applied during region assignment as the individual brain scan itself is already aligned. Otherwise, _voluba-mriwarp_ will search the matching transformation matrix `filename_transformationInverseComposite.h5` in the given <mark>Output folder</mark>. Please change the location to the folder where the warping results for the given <mark>Input NIfTI</mark> were written to. If there are no results to this MRI scan yet, you need to [warp the input](#warping) first.
@@ -61,12 +61,12 @@ Double-click a point in the input scan in the [viewer](#viewer). _voluba-mriwarp
 ![icon](images/5.png) **View more details about a specific region in siibra-explorer.**  
 Click <mark>:fa-external-link:</mark> to get more information about the brain region in [siibra-explorer](https://atlases.ebrains.eu/viewer/human). Explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.
 
-## Viewing a input brain
+## Viewing an input brain
 
 Initially, the viewer displays the MNI152 template. In this case, you can select points to retrieve a region without providing a transformation matrix. To load an MRI scan into the viewer, follow this step:
 
 ![icon](images/1.png) **Select the input MRI scan to inspect.**  
-The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan in the file explorer by clicking <mark>...</mark>.
+The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and has to contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan in the file explorer by clicking <mark>...</mark>.
 
 In the viewer, you can move the MRI scan around, zoom in/out and view different slices of the scan. Inspect the volume just like in Google Maps: 
 
