@@ -486,6 +486,9 @@ class App(tk.Tk):
 
         parcellation = tk.StringVar()
         # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
+        # TODO think about different layout (choose parcellation before assignment)
+                # pro: if someone knows he/she's looking for DiFuMo, he/she doesn't have to wait for Julich Brain assignment
+                # con: parcellation could be changed while region assignment is calculating --> double output (like for fast double clicks)
         ttk.OptionMenu(parcellation_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(), command=self.__change_parcellation).grid(row=0, column=1, sticky='ew')
         parcellation_frame.pack(anchor='n', fill='x', side='top', pady=(0, 20))
 
