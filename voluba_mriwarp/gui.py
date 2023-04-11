@@ -479,9 +479,15 @@ class App(tk.Tk):
                  text=f'identified with: {tuple(target)} [mm] in MNI152 2009c nonl asym').pack(anchor='n', fill='x',
                                                                                                side='top')
 
-        # widget for the parcellation
-        tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=10, pady=5,
-                 text=f'assign to: Julich-Brain 2.9').pack(anchor='n', fill='x', side='top', pady=(0, 20))
+        # widgets for the parcellation
+        parcellation_frame = tk.Frame(self.__region_frame)
+        tk.Label(parcellation_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=10, pady=5,
+                 text=f'assign to:').grid(row=0, column=0, sticky='w')
+
+        parcellation = tk.StringVar()
+        # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
+        ttk.OptionMenu(parcellation_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(), command=self.__change_parcellation).grid(row=0, column=1, sticky='ew')
+        parcellation_frame.pack(anchor='n', fill='x', side='top', pady=(0, 20))
 
         # widgets for assigned regions
         if probabilities:
@@ -520,6 +526,12 @@ class App(tk.Tk):
             tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5,
                      pady=5, text=f'No region found', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
             frame.pack(anchor='n', fill='x', side='top', pady=2.5)
+
+    def __change_parcellation(self, parcellation):
+        self.logic.set_parcellation(parcellation)
+        for widget in self.__region_frame.winfo_children():
+            widget.destroy()
+        self.__create_assignment()
 
     def on_closing(self):
         """Destroy the main window after asking for quit."""

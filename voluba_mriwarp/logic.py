@@ -129,6 +129,16 @@ class Logic:
             'mni152', maptype='continuous')
         maybe_download_parameters(0)
 
+        multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
+        mni152 = multilevel_human.spaces.MNI152_2009C_NONL_ASYM
+
+        self.__mni152_parcellations = []
+        for parcellation in multilevel_human.parcellations:
+            if parcellation.supports_space(mni152):
+                self.__mni152_parcellations.append(parcellation.name)
+
+        self.set_parcellation(self.__mni152_parcellations[0])
+
     def get_in_path(self):
         """Return the path to the input NIfTI."""
         return self.__in_path
@@ -148,16 +158,27 @@ class Logic:
     def get_numpy_source(self):
         """Return the input NIfTI as numpy.ndarray"""
         return self.__numpy_source
+    
+    def get_parcellations(self):
+        return self.__mni152_parcellations
+    
+    def set_parcellation(self, parcellation):
+        import siibra
+        multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
+        self.__parcellation = multilevel_human.get_parcellation(parcellation)
+
+    def get_parcellation(self):
+        return self.__parcellation
 
     def set_img_type(self, type):
         """Set the image type.
 
         :param str type: type of the image (template, aligned or unaligned)
-        :raise ValueError: if path is not vali
+        :raise ValueError: if path is not valid
         """
         if type not in ['template', 'aligned', 'unaligned']:
             raise ValueError(
-                'Image type musst be "template", "aligned" or "unaligned"')
+                'Image type must be "template", "aligned" or "unaligned"')
         else:
             self.__img_type = type
 
@@ -288,13 +309,12 @@ class Logic:
 
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = multilevel_human.spaces.MNI152_2009C_NONL_ASYM
-        julichbrain = multilevel_human.parcellations.JULICH_BRAIN_CYTOARCHITECTONIC_MAPS_2_9
 
         # Transform from patient's voxel to patient's physical space.
         source_coords_ras = self.vox2phys(coords)
 
         if self.__img_type == 'unaligned':
-            pmaps = julichbrain.get_map(mni152, maptype='continuous')
+            pmaps = self.__parcellation.get_map(mni152, maptype='continuous')
             target_coords_ras = self.__phys2mni(source_coords_ras)
             target = siibra.Point(target_coords_ras[0], space=mni152)
             try:
@@ -308,13 +328,13 @@ class Logic:
             else:
                 probabilities = []
                 for i in range(len(results)):
-                    region = julichbrain.decode_region(results.iloc[i].Region)
+                    region = self.__parcellation.decode_region(results.iloc[i].Region)
                     probability = results.iloc[i].MaxValue
                     url = siibra_explorer_toolsuite.run(
-                        multilevel_human, mni152, julichbrain, region)
+                        multilevel_human, mni152, self.__parcellation, region)
                     probabilities.append([region, probability, url])
         elif self.__img_type == 'aligned':
-            pmaps = julichbrain.get_map(mni152, maptype='continuous')
+            pmaps = self.__parcellation.get_map(mni152, maptype='continuous')
             target_coords_ras = source_coords_ras
             target = siibra.Point(target_coords_ras[0], space=mni152)
             try:
@@ -328,13 +348,13 @@ class Logic:
             else:
                 probabilities = []
                 for i in range(len(results)):
-                    region = julichbrain.decode_region(results.iloc[i].Region)
+                    region = self.__parcellation.decode_region(results.iloc[i].Region)
                     probability = results.iloc[i].MaxValue
                     url = siibra_explorer_toolsuite.run(
-                        multilevel_human, mni152, julichbrain, region)
+                        multilevel_human, mni152, self.__parcellation, region)
                     probabilities.append([region, probability, url])
         else:
-            mpmaps = julichbrain.get_map(mni152, maptype='labelled')
+            mpmaps = self.__parcellation.get_map(mni152, maptype='labelled')
             target_coords_ras = source_coords_ras
             target = siibra.Point(target_coords_ras[0], space=mni152)
             try:
@@ -343,14 +363,14 @@ class Logic:
                 raise PointNotFoundError('Point doesn\'t match MNI152 space.')
 
             try:
-                region = julichbrain.decode_region(assignments[0][0][0])
+                region = self.__parcellation.decode_region(assignments[0][0][0])
             except IndexError:
                 probabilities = None
             else:
                 probabilities = []
                 probability = 1
                 url = siibra_explorer_toolsuite.run(
-                    multilevel_human, mni152, julichbrain, region)
+                    multilevel_human, mni152, self.__parcellation, region)
                 probabilities.append([region, probability, url])
 
         return source_coords_ras[0], target_coords_ras[0], probabilities
