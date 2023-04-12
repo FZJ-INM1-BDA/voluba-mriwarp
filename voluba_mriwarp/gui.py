@@ -38,7 +38,7 @@ class App(tk.Tk):
     def __create_logic(self):
         """Create the instances for the logical backend."""
         self.logic = Logic()
-        self.logic.set_in_path(mni_template)
+        self.logic.set_in_path(mni_t1_template)
         if not os.path.exists(mriwarp_home):
             os.mkdir(mriwarp_home)
         self.logic.set_out_path(mriwarp_home)
@@ -141,12 +141,28 @@ class App(tk.Tk):
         self.__open_file_path.grid(column=1, row=0, pady=5)
         open_file_button.grid(column=2, row=0, padx=5, pady=5, sticky='e')
 
+        # widgets for sequence
+        tk.Label(self.__warping_frame, bg=siibra_highlight_bg, fg='white', justify='left',
+                 text='MRI sequence:').grid(column=0, row=1, sticky='w', padx=5)
+        button_frame = tk.Frame(self.__warping_frame, bg=siibra_highlight_bg)
+        button_frame.grid(column=1, row=1, sticky='w', padx=5, rowspan=2)
+        self.__sequence = tk.IntVar(value=1)
+        s = ttk.Style(self)
+        s.configure("TRadiobutton", background=siibra_highlight_bg,
+                    foreground='white')
+        ttk.Radiobutton(button_frame, text='T1', variable=self.__sequence,
+                        value=1, command=self.__selection).grid(column=0, row=0, sticky='w')
+        ttk.Radiobutton(button_frame, text='T2', variable=self.__sequence,
+                        value=2, command=self.__selection).grid(column=1, row=0, sticky='w')
+
         # dropdown for MNI152 input
         tk.Label(self.__warping_frame, bg=siibra_highlight_bg, fg='white', justify='left',
-                 text='Input already\nin MNI152:').grid(column=0, row=1, sticky='w', padx=5)
-        self.__check = tk.StringVar()
-        ttk.OptionMenu(self.__warping_frame, self.__check, "", "no", "yes",
-                       command=self.__set_mni).grid(column=1, row=1, sticky='ew')
+                 text='Input already\nin MNI152:').grid(column=0, row=2, sticky='w', padx=5)
+        self.__mni = tk.BooleanVar(value=0)
+        ttk.Radiobutton(button_frame, text='no', variable=self.__mni, value=0,
+                        command=self.__set_mni).grid(column=0, row=1, sticky='w')
+        ttk.Radiobutton(button_frame, text='yes', variable=self.__mni,
+                        value=1, command=self.__set_mni).grid(column=1, row=1, sticky='w')
 
         # widgets for choosing the output folder
         output_folder = tk.StringVar()
@@ -163,14 +179,14 @@ class App(tk.Tk):
         self.__open_folder_path.insert(0, mriwarp_home)
         open_folder_button = tk.Button(
             self.__warping_frame, bd=0, command=self.__select_folder, text='...', padx=2.5)
-        label.grid(column=0, row=2, padx=5, pady=5, sticky='w')
-        self.__open_folder_path.grid(column=1, row=2, pady=5)
-        open_folder_button.grid(column=2, row=2, padx=5, pady=5, sticky='e')
+        label.grid(column=0, row=3, padx=5, pady=5, sticky='w')
+        self.__open_folder_path.grid(column=1, row=3, pady=5)
+        open_folder_button.grid(column=2, row=3, padx=5, pady=5, sticky='e')
 
         # widgets for warping to MNI152
         self.__warp_button = tk.Button(self.__warping_frame, bd=0, command=self.__prepare_warping,
                                        text='Warp input to MNI152 space')
-        self.__warp_button.grid(column=1, row=3, pady=5)
+        self.__warp_button.grid(column=1, row=4, pady=5)
         self.__check_mark = None
 
         # frame for region assignment
@@ -190,8 +206,26 @@ class App(tk.Tk):
         tk.Button(side_panel, bg=siibra_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
             'https://voluba-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
 
-    def __set_mni(self, value):
-        if value == "yes":
+    def __selection(self):
+        if self.__sequence.get() == 1:
+            self.logic.set_sequence(1)
+            if self.logic.get_in_path() in [mni_t1_template, mni_t2_template]:
+                self.logic.set_in_path(mni_t1_template)
+                self.__coronal_view.canvas.destroy()
+                self.__coronal_view.destroy()
+                self.__coronal_slider.destroy()
+                self.__create_viewer()
+        elif self.__sequence.get() == 2:
+            self.logic.set_sequence(2)
+            if self.logic.get_in_path() in [mni_t1_template, mni_t2_template]:
+                self.logic.set_in_path(mni_t2_template)
+                self.__coronal_view.canvas.destroy()
+                self.__coronal_view.destroy()
+                self.__coronal_slider.destroy()
+                self.__create_viewer()
+
+    def __set_mni(self):
+        if self.__mni.get():
             self.__warp_button.grid_remove()
             if self.__check_mark:
                 self.__check_mark.grid_remove()
@@ -254,8 +288,8 @@ class App(tk.Tk):
             self.__coronal_slider.destroy()
 
             self.__create_viewer()
-            self.__check.set("no")
-            self.__set_mni("no")
+            self.__mni.set(0)
+            self.__set_mni()
 
     def __track_output(self, variable):
         """Observe the Entry widget for the path to the output folder.
@@ -317,7 +351,7 @@ class App(tk.Tk):
 
         self.__progress_bar = ttk.Progressbar(self.__warping_frame, length=450, mode='indeterminate',
                                               orient='horizontal')
-        self.__progress_bar.grid(column=0, row=3, columnspan=3, padx=5, pady=5)
+        self.__progress_bar.grid(column=0, row=4, columnspan=3, padx=5, pady=5)
         self.__progress_bar.start()
 
         threading.Thread(target=self.__run_warping, daemon=True).start()
@@ -344,7 +378,7 @@ class App(tk.Tk):
         # Show a green check mark when the warping was successful.
         self.__check_mark = tk.Label(
             self.__warping_frame, bg=siibra_highlight_bg, image=self.__success_icon)
-        self.__check_mark.grid(column=2, row=3, pady=5)
+        self.__check_mark.grid(column=2, row=4, pady=5)
         # Retry the region assignment for the currently selected point when warping finishes.
         if self.__annotation != [-1, -1, -1]:
             self.set_annotation()
@@ -361,7 +395,7 @@ class App(tk.Tk):
         # Show a red cross when the warping was NOT successful.
         self.__check_mark = tk.Label(
             self.__warping_frame, bg=siibra_highlight_bg, image=self.__error_icon)
-        self.__check_mark.grid(column=2, row=3, pady=5)
+        self.__check_mark.grid(column=2, row=4, pady=5)
         logging.getLogger(mriwarp_name).error(
             f'Error during {stage}: {str(error)}')
         messagebox.showerror('Error',
@@ -379,7 +413,7 @@ class App(tk.Tk):
     def set_annotation(self):
         """Set the annotation and start the region assignment."""
         type = 'template' if self.logic.get_in_path(
-        ) == mni_template else 'aligned' if self.__check.get() == 'yes' else 'unaligned'
+        ) in [mni_t1_template, mni_t2_template] else 'aligned' if self.__mni.get() == 1 else 'unaligned'
         self.logic.set_img_type(type)
         self.__annotation = self.__coronal_view.get_annotation()
         # The origin in the viewer is upper left but the image origin is lower left.

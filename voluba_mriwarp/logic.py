@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from HD_BET.run import run_hd_bet
 
-from voluba_mriwarp.config import mriwarp_name, mni_template
+from voluba_mriwarp.config import mriwarp_name, mni_t1_template, mni_t2_template
 from voluba_mriwarp.exceptions import *
 
 
@@ -26,6 +26,7 @@ class Logic:
         self.__numpy_source = None
         self.__img_type = ''
         self.__error = ''
+        self.__mni_template = mni_t1_template
 
     def check_in_path(self, in_path):
         """Check if the input path is valid.
@@ -66,6 +67,12 @@ class Logic:
             return False
         else:
             return True
+
+    def set_sequence(self, value):
+        if value == 1:
+            self.__mni_template = mni_t1_template
+        elif value == 2:
+            self.__mni_template = mni_t2_template
 
     def set_in_path(self, in_path):
         """Set the path to the input NIfTI.
@@ -191,7 +198,7 @@ class Logic:
 
         :raise mriwarp.SubprocessFailedError: if execution of antsRegistration failed
         """
-        fixed = mni_template
+        fixed = self.__mni_template
         moving = os.path.normpath(self.__reorient_path_calc)
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
@@ -201,19 +208,21 @@ class Logic:
             self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
 
         if platform.system() == 'Linux':
-            command = [f'antsRegistration --verbose 1 --dimensionality 3 --use-histogram-matching 0 --winsorize-image-intensities [0.005,0.995] --masks [NULL,{mask}] --float --interpolation Linear --output [{transform},{volume}] --write-composite-transform 1 --collapse-output-transforms 1 --transform Rigid[0.1] --metric MI[{fixed},{moving},1,32,Regular,0.25] --convergence [1000x500x250x0,1e-6,10] --smoothing-sigmas 4x3x2x1vox --shrink-factors 12x8x4x2 --transform Affine[0.1] --metric MI[{fixed},{moving},1,32,Regular,0.25] --convergence [1000x500x250x0,1e-6,10] --smoothing-sigmas 4x3x2x1vox --shrink-factors 12x8x4x2 --transform SyN[0.1,3,0] --metric MI[{fixed},{moving},1,32] --convergence [100x100x70x50x0,1e-6,10] --smoothing-sigmas 5x3x2x1x0vox --shrink-factors 10x6x4x2x1']
+            command = [f'antsRegistration --verbose 1 --dimensionality 3 --use-histogram-matching 0 --winsorize-image-intensities [0.005,0.995] --float --interpolation Linear --output [{transform},{volume}] --write-composite-transform 1 --collapse-output-transforms 1 --transform Rigid[0.1] --metric MI[{fixed},{moving},1,32,Regular,0.25] --convergence [1000x500x250x0,1e-6,10] --smoothing-sigmas 4x3x2x1vox --shrink-factors 12x8x4x2 --masks [NULL,{mask}] --transform Affine[0.1] --metric MI[{fixed},{moving},1,32,Regular,0.25] --convergence [1000x500x250x0,1e-6,10] --smoothing-sigmas 4x3x2x1vox --shrink-factors 12x8x4x2 --masks [NULL,{mask}] --transform SyN[0.1,3,0] --metric MI[{fixed},{moving},1,32] --convergence [100x100x70x50x0,1e-6,10] --smoothing-sigmas 5x3x2x1x0vox --shrink-factors 10x6x4x2x1 --masks [NULL,{mask}]']
         else:
             command = ['antsRegistration', '--verbose', '1', '--dimensionality', '3', '--use-histogram-matching', '0',
-                       '--winsorize-image-intensities', '[0.005,0.995]', '--masks', f'[NULL,{mask}]', '--float', '--interpolation', 'Linear', '--output',
+                       '--winsorize-image-intensities', '[0.005,0.995]', '--float', '--interpolation', 'Linear', '--output',
                        f'[{transform},{volume}]', '--write-composite-transform', '1', '--collapse-output-transforms', '1',
                        '--transform', 'Rigid[0.1]', '--metric', f'MI[{fixed},{moving},1,32,Regular,0.25]',
                        '--convergence', '[1000x500x250x0,1e-6,10]', '--smoothing-sigmas', '4x3x2x1vox', '--shrink-factors',
-                       '12x8x4x2', '--use-estimate-learning-rate-once', '--transform', 'Affine[0.1]', '--metric',
+                       '12x8x4x2', '--masks', f'[NULL,{mask}]', '--use-estimate-learning-rate-once', '--transform', 'Affine[0.1]', '--metric',
                        f'MI[{fixed},{moving},1,32,Regular,0.25]', '--convergence', '[1000x500x250x0,1e-6,10]',
-                       '--smoothing-sigmas', '4x3x2x1vox', '--shrink-factors', '12x8x4x2',
+                       '--smoothing-sigmas', '4x3x2x1vox', '--shrink-factors', '12x8x4x2', '--masks', f'[NULL,{mask}]',
                        '--use-estimate-learning-rate-once', '--transform', 'SyN[0.1,3,0]', '--metric',
                        f'MI[{fixed},{moving},1,32]', '--convergence', '[100x100x70x50x0,1e-6,10]', '--smoothing-sigmas',
-                       '5x3x2x1x0vox', '--shrink-factors', '10x6x4x2x1', '--use-estimate-learning-rate-once']
+                       '5x3x2x1x0vox', '--shrink-factors', '10x6x4x2x1', '--masks', f'[NULL,{mask}]', '--use-estimate-learning-rate-once']
+
+            # TODO: T1 works better with mask, T2 works better without mask (BUT on some data it doesn't work at all both ways)
 
         try:
             result = subprocess.run(command, stdout=subprocess.PIPE,
