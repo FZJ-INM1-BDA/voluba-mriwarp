@@ -173,10 +173,18 @@ class App(tk.Tk):
         self.__warp_button.grid(column=1, row=3, pady=5)
         self.__check_mark = None
 
+        # widgets for the parcellation
+        parcellation_frame = tk.Frame(side_panel, bg=siibra_bg)
+        tk.Label(parcellation_frame, bg=siibra_bg, fg='white', text='Parcellation:').grid(row=0, column=0, sticky='w', padx=5)
+        parcellation = tk.StringVar()
+        # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
+        ttk.OptionMenu(parcellation_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(), command=self.__change_parcellation).grid(row=0, column=1, sticky='ew')
+        parcellation_frame.pack(anchor='w', fill='x', side='top', pady=(20, 10))
+
         # frame for region assignment
         self.__region_frame = tk.Frame(side_panel, bg=siibra_bg)
         self.__region_frame.pack(anchor='w', fill='x',
-                                 side='top', pady=(20, 10))
+                                 side='top', pady=(10, 10))
 
         # logos
         hbp_img = Image.open(hbp_ebrains_color)
@@ -227,9 +235,9 @@ class App(tk.Tk):
 
         # widget for info on how to select regions
         label = tk.Label(self.__region_frame, anchor='w', bg=siibra_bg, borderwidth=10, compound='left', fg='white',
-                         font=font_12, image=self.__info_icon, text=' Double click to select a region.')
+                         font=font_12, image=self.__info_icon, text=' Double click to assign a region.')
         label.image = self.__info_icon
-        label.pack(anchor='n', expand=True, fill='x', side='left')
+        label.pack(anchor='n', fill='x', side='left')
 
         self.update()
         # Move the input NIfTI to the center of the viewer.
@@ -478,19 +486,8 @@ class App(tk.Tk):
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=10,
                  text=f'identified with: {tuple(target)} [mm] in MNI152 2009c nonl asym').pack(anchor='n', fill='x',
                                                                                                side='top')
-
-        # widgets for the parcellation
-        parcellation_frame = tk.Frame(self.__region_frame)
-        tk.Label(parcellation_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=10, pady=5,
-                 text=f'assign to:').grid(row=0, column=0, sticky='w')
-
-        parcellation = tk.StringVar()
-        # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
-        # TODO think about different layout (choose parcellation before assignment)
-                # pro: if someone knows he/she's looking for DiFuMo, he/she doesn't have to wait for Julich Brain assignment
-                # con: parcellation could be changed while region assignment is calculating --> double output (like for fast double clicks)
-        ttk.OptionMenu(parcellation_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(), command=self.__change_parcellation).grid(row=0, column=1, sticky='ew')
-        parcellation_frame.pack(anchor='n', fill='x', side='top', pady=(0, 20))
+        tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=10, pady=5,
+                 text=f'assign to: {self.logic.get_parcellation()}').pack(anchor='n', fill='x', side='top')
 
         # widgets for assigned regions
         if probabilities:
@@ -532,9 +529,11 @@ class App(tk.Tk):
 
     def __change_parcellation(self, parcellation):
         self.logic.set_parcellation(parcellation)
-        for widget in self.__region_frame.winfo_children():
-            widget.destroy()
-        self.__create_assignment()
+
+        if self.__annotation != [-1, -1, -1]:
+            for widget in self.__region_frame.winfo_children():
+                widget.destroy()
+            self.__create_assignment()
 
     def on_closing(self):
         """Destroy the main window after asking for quit."""
