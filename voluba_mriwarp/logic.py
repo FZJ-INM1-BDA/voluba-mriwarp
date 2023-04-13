@@ -244,24 +244,17 @@ class Logic:
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
         
-        # Replacement of TRANSFORM and VOLUME is incorrect:
-        # nonlinear_C:\\Users\\jthoennissen\\siibra-mriwarp\\A00058952_rt_colin27_lin_head_n4_transformation
-        # nonlinear_C:\\Users\\jthoennissen\\siibra-mriwarp\\A00058952_rt_colin27_lin_head_n4_registered.nii.gz
+        # TODO idea: To define an own ANTs registration command, the user has the following macros to specify parameters:
+        # OUTPATH; INPATH; NAME; FIXED; MOVING; MASK; TRANSFORM; VOLUME.
+        # The GUI will be altered (on another branch) by separating warping and region assignment.
+        # This way, the user that used an own registration, can specify the transformation file that needs to be used.
+        # If the user selects one of the predefined registrations (default, optimised), voluba-mriwarp will automatically
+        # find the OUTPATH/NAME_transformationInverseComposite.h5 in OUTPATH (clarify if OUTPATH is always ~/voluba-mriwarp for region assignment
+        # or the one that is currently used in the warping tab)
+        
+        transform = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_transformation'))
+        volume = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
 
-        # TODO: think about this: for region assignment, siibra-mriwarp will look for [name]_transformationInverseComposite.h5 
-        # --> wouldn't work if the user specified some other name or if it's .mat instead of .h5
-        # --> solution for .mat vs .h5 would be to always do write-composite-transform 1 which produces .h5 (?)
-
-        # Let the user always only use TRANSFORM and VOLUME without appending any prefixes or suffixes
-        # replace TRANSFORM with [out_path]/[command]_[name]_transform
-        # replace VOLUME with [out_path]/[command]_[name]_registered.nii.gz
-        # TODO above TODO wouldn't work again --> Idea: for the last registration command leave [command] out or copy it?
-
-        transform = os.path.normpath(os.path.join(
-            self.__out_path_calc, f'{self.__name_calc}_transformation'))
-        volume = os.path.normpath(os.path.join(
-            self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
-         
         commands = []
         for command in self.__parameters.keys():
             cmd = 'antsRegistration '
@@ -272,7 +265,7 @@ class Logic:
                         for stage_param in stage.keys():
                             cmd += f'--{stage_param} {stage[stage_param]} '
                 else:
-                    # simple parameters
+                    # general parameters
                     cmd += f'--{param} {self.__parameters[command][param]} '
 
             # replace placeholders with actual files
@@ -281,6 +274,8 @@ class Logic:
             cmd = cmd.replace('MASK', mask)
             cmd = cmd.replace('TRANSFORM', transform)
             cmd = cmd.replace('VOLUME', volume)
+            cmd = cmd.replace('OUTPATH', self.__out_path_calc)
+            cmd = cmd.replace('NAME', self.__name_calc)
 
             commands.append(cmd.rstrip())
 
