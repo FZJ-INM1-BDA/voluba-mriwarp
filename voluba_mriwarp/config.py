@@ -17,6 +17,7 @@ hbp_ebrains_color = './data/hbp_ebrains_color.png'
 
 # fonts
 font_10_b = ('', 10, 'bold')
+font_10 = ('', 10, '')
 font_12 = ('', 12, '')
 font_12_b = ('', 12, 'bold')
 font_18_b = ('', 18, 'bold')

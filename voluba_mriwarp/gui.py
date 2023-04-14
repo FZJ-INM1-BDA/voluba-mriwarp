@@ -30,7 +30,8 @@ class App(tk.Tk):
         self.protocol('WM_DELETE_WINDOW', self.on_closing)
 
         self.__create_logic()
-        self.__create_preload_window()
+        # TODO uncomment
+        # self.__create_preload_window()
         self.__create_main_window()
 
         self.mainloop()
@@ -57,7 +58,7 @@ class App(tk.Tk):
         # some information
         tk.Label(self, text='For details see voluba-mriwarp.readthedocs.io', bg=siibra_bg,
                  fg='white', font=font_12).pack(padx=10, pady=5)
-        tk.Label(self, text="Loading siibra components. This may take a few minutes.",
+        tk.Label(self, text='Loading siibra components. This may take a few minutes.',
                  bg=siibra_bg, fg=siibra_fg).pack(padx=10, pady=5)
 
         # Preload probability maps to speed up region assignment.
@@ -100,6 +101,8 @@ class App(tk.Tk):
             'external-link-alt', fill=siibra_fg, scale_to_width=15)
         self.__help_icon = icon_to_image(
             'question-circle', fill=siibra_fg, scale_to_width=20)
+        self.__brain_icon = icon_to_image(
+            'brain', fill='white', scale_to_width=15)
 
     def __create_viewpanel(self):
         """Create the frame for the NIfTI viewer."""
@@ -110,88 +113,152 @@ class App(tk.Tk):
         self.__view_panel.pack(side='right')
         self.__view_panel.pack_propagate(False)
 
-    def __create_sidepanel(self):
-        """Create the frame and widgets for data selection, warping and region assignment."""
-        self.update()
-        side_panel = tk.Frame(
-            self, bg=siibra_bg, height=self.winfo_height(), width=sidepanel_width)
-        side_panel.pack(side='left', pady=10)
-        side_panel.pack_propagate(False)
-
-        # frame for data selection and warping
-        self.__warping_frame = tk.Frame(
-            side_panel, bg=siibra_highlight_bg, pady=10)
-        self.__warping_frame.pack(anchor='w', fill='x', side='top')
-
+    # TODO unify padding
+    def __init_warping_widgets(self):
         # widgets for choosing the input NIfTI
         input_file = tk.StringVar()
         input_file.trace('w', lambda name, index, mode,
-                         sv=input_file: self.__track_input(sv))
-        label = tk.Label(self.__warping_frame, bg=siibra_highlight_bg,
-                         fg='white', text='Input NIfTI: ')
-        if platform.system() == "Linux":
-            self.__open_file_path = tk.Entry(
+                         sv=input_file: self.__track_input_warping(sv))
+        tk.Label(self.__warping_frame, bg=siibra_highlight_bg, width=15, anchor='w',
+                         fg='white', text='Input NIfTI: ').grid(column=0, row=0, sticky='w', padx=(15, 10), pady=(20, 0))
+        if platform.system() == 'Linux':
+            self.__open_file_path_warping = tk.Entry(
                 self.__warping_frame, bd=0, textvariable=input_file, width=39)
         else:
-            self.__open_file_path = tk.Entry(
+            self.__open_file_path_warping = tk.Entry(
                 self.__warping_frame, bd=0, textvariable=input_file, width=57)
-        open_file_button = tk.Button(
-            self.__warping_frame, bd=0, command=self.__select_file, text='...', padx=2.5)
-        label.grid(column=0, row=0, padx=5, pady=5, sticky='w')
-        self.__open_file_path.grid(column=1, row=0, pady=5)
-        open_file_button.grid(column=2, row=0, padx=5, pady=5, sticky='e')
-
-        # dropdown for MNI152 input
-        tk.Label(self.__warping_frame, bg=siibra_highlight_bg, fg='white', justify='left',
-                 text='Input already\nin MNI152:').grid(column=0, row=1, sticky='w', padx=5)
-        self.__check = tk.StringVar()
-        ttk.OptionMenu(self.__warping_frame, self.__check, "", "no", "yes",
-                       command=self.__set_mni).grid(column=1, row=1, sticky='ew')
+        self.__open_file_path_warping.grid(column=1, row=0, pady=(20, 0))
+        tk.Button(
+            self.__warping_frame, bd=0, command=self.__select_file_warping, text='...', padx=2.5).grid(column=2, row=0, sticky='e', padx=(10, 15), pady=(20, 0))
 
         # widgets for choosing the output folder
         output_folder = tk.StringVar()
         output_folder.trace('w', lambda name, index, mode,
                             sv=output_folder: self.__track_output(sv))
-        label = tk.Label(self.__warping_frame, bg=siibra_highlight_bg,
-                         fg='white', text='Output folder: ')
-        if platform.system() == "Linux":
+        tk.Label(self.__warping_frame, bg=siibra_highlight_bg, width=15, anchor='w',
+                         fg='white', text='Output folder: ').grid(column=0, row=2, sticky='w', padx=(15, 10), pady=10)
+        if platform.system() == 'Linux':
             self.__open_folder_path = tk.Entry(
                 self.__warping_frame, bd=0, textvariable=output_folder, width=39)
         else:
             self.__open_folder_path = tk.Entry(
                 self.__warping_frame, bd=0, textvariable=output_folder, width=57)
         self.__open_folder_path.insert(0, mriwarp_home)
-        open_folder_button = tk.Button(
-            self.__warping_frame, bd=0, command=self.__select_folder, text='...', padx=2.5)
-        label.grid(column=0, row=2, padx=5, pady=5, sticky='w')
-        self.__open_folder_path.grid(column=1, row=2, pady=5)
-        open_folder_button.grid(column=2, row=2, padx=5, pady=5, sticky='e')
+        self.__open_folder_path.grid(column=1, row=2, pady=10)
+        tk.Button(
+            self.__warping_frame, bd=0, command=self.__select_folder, text='...', padx=2.5).grid(column=2, row=2, sticky='e', padx=(10, 15), pady=10)
 
         # widgets for warping to MNI152
         self.__warp_button = tk.Button(self.__warping_frame, bd=0, command=self.__prepare_warping,
-                                       text='Warp input to MNI152 space')
-        self.__warp_button.grid(column=1, row=3, pady=5)
+                                       text='Warp input to MNI152 space', padx=2.5)
+        self.__warp_button.grid(column=1, row=3, pady=(10, 20))
         self.__check_mark = None
 
-        # frame for region assignment
-        self.__region_frame = tk.Frame(side_panel, bg=siibra_bg)
-        self.__region_frame.pack(anchor='w', fill='x',
-                                 side='top', pady=(20, 10))
+    def __init_assignment_widgets(self):
+        # widgets for choosing the input NIfTI
+        input_file = tk.StringVar()
+        input_file.trace('w', lambda name, index, mode,
+                         sv=input_file: self.__track_input(sv))
+        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, width=15, anchor='w',
+                         fg='white', text='Input NIfTI: ').grid(column=0, row=0, sticky='w', padx=(15, 10), pady=(20, 0))
+        if platform.system() == 'Linux':
+            self.__open_file_path = tk.Entry(
+                self.__assignment_frame, bd=0, textvariable=input_file, width=39)
+        else:
+            self.__open_file_path = tk.Entry(
+                self.__assignment_frame, bd=0, textvariable=input_file, width=57)
+        self.__open_file_path.grid(column=1, row=0, pady=(20, 0))
+        tk.Button(
+            self.__assignment_frame, bd=0, command=self.__select_file, text='...', padx=2.5).grid(column=2, row=0, sticky='e', padx=(10, 15), pady=(20, 0))
+
+        # dropdown for MNI152 input
+        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
+                 text='Input already\nin MNI152:', width=15).grid(column=0, row=1, sticky='w', padx=(15, 10), pady=5)
+        self.__check = tk.StringVar()
+        ttk.OptionMenu(self.__assignment_frame, self.__check, '', 'no', 'yes',
+                       command=self.__set_mni).grid(column=1, row=1, sticky='ew', pady=5)
+
+        # widgets for choosing the transformation file
+        transform_file = tk.StringVar()
+        transform_file.trace('w', lambda name, index, mode,
+                             sv=transform_file: self.__track_transform(sv))
+        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, width=15, anchor='w',
+                         fg='white', text='Transformation file: ').grid(column=0, row=2, sticky='w', padx=(15, 10), pady=(0, 20))
+        if platform.system() == 'Linux':
+            self.__open_transform_path = tk.Entry(
+                self.__assignment_frame, bd=0, textvariable=transform_file, width=39)
+        else:
+            self.__open_transform_path = tk.Entry(
+                self.__assignment_frame, bd=0, textvariable=transform_file, width=57)
+        self.__open_transform_path.grid(column=1, row=2, pady=(0,20))
+        tk.Button(
+            self.__assignment_frame, bd=0, command=self.__select_transform, text='...', padx=2.5).grid(column=2, row=2, sticky='e', padx=(10, 15), pady=(0, 20))
+
+        # TODO put this into a frame below region_frame
+        self.__region_frame = tk.Frame(self.__assignment_frame, bg=siibra_bg)
+        self.__region_frame.grid(column=0, row=3, columnspan=3, sticky='nswe')
+        # widget for info on how to select regions
+        label = tk.Label(self.__region_frame, anchor='w', bg=siibra_bg, borderwidth=10, compound='left', fg='white',
+                         font=font_10, image=self.__info_icon, text=' Double click a location in the viewer to assign a brain region.')
+        label.image = self.__info_icon
+        label.grid(row=0, column=0, sticky='w', pady=5, padx=5)
+
+    def __show_warping(self):
+        self.__assignment_frame.grid_remove()
+        self.__warping_frame.grid()
+
+    def __show_assignment(self):
+        self.__warping_frame.grid_remove()
+        self.__assignment_frame.grid()
+
+    def __create_sidepanel(self):
+        """Create the frame and widgets for data selection, warping and region assignment."""
+        self.update()
+        side_panel = tk.Frame(
+            self, bg=siibra_bg, height=self.winfo_height(), width=sidepanel_width)
+        side_panel.pack(side='left', pady=10, fill='y', expand=True)
+        side_panel.pack_propagate(False)
+
+        # menu chips for warping and region assignment
+        self.__step = tk.IntVar()
+        menu = tk.Frame(side_panel, bg=warp_bg)
+        tk.Radiobutton(menu, text='Warping', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg, bd=0,
+                       variable=self.__step, command=self.__show_warping, value=0).grid(row=0, column=0)
+        tk.Radiobutton(menu, text=' Region assignment', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg, bd=0,
+                       variable=self.__step, command=self.__show_assignment, value=1).grid(row=0, column=1)
+        menu.grid(row=0, column=0, sticky='we')
+
+        # frame for warping
+        self.__warping_frame = tk.Frame(
+            side_panel, bg=siibra_highlight_bg)
+        self.__warping_frame.grid(row=1, column=0, sticky='nwe')
+
+        # # frame for region assignment
+        self.__assignment_frame = tk.Frame(
+            side_panel, bg=siibra_highlight_bg)
+        self.__assignment_frame.grid(row=1, column=0, sticky='nwe')
+
+        self.__init_warping_widgets()
+        self.__init_assignment_widgets()
+        self.__show_warping()
 
         # logos
+        side_panel.rowconfigure(1, weight=1)
+        logo_frame = tk.Frame(side_panel, bg=siibra_bg)
+        logo_frame.grid(row=2, column=0, sticky='swe')
         hbp_img = Image.open(hbp_ebrains_color)
         hbp_img = PhotoImage(hbp_img.resize(
             size=(hbp_img.size[0] // 25, hbp_img.size[1] // 25)))
-        img_hbp = tk.Label(side_panel, bg=siibra_bg, image=hbp_img)
+        img_hbp = tk.Label(logo_frame, bg=siibra_bg, image=hbp_img)
         img_hbp.image = hbp_img
         img_hbp.pack(anchor='s', side='left')
 
         # help icon
-        tk.Button(side_panel, bg=siibra_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
+        tk.Button(logo_frame, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
             'https://voluba-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
 
     def __set_mni(self, value):
-        if value == "yes":
+        if value == 'yes':
             self.__warp_button.grid_remove()
             if self.__check_mark:
                 self.__check_mark.grid_remove()
@@ -221,22 +288,28 @@ class App(tk.Tk):
         self.__coronal_slider.set(coronal_slice)
         self.__coronal_slider.pack(side='top', padx=10, pady=10)
 
-        # Remove previous region assignments.
-        for widget in self.__region_frame.winfo_children():
-            widget.destroy()
-
-        # widget for info on how to select regions
-        label = tk.Label(self.__region_frame, anchor='w', bg=siibra_bg, borderwidth=10, compound='left', fg='white',
-                         font=font_12, image=self.__info_icon, text=' Double click to select a region.')
-        label.image = self.__info_icon
-        label.pack(anchor='n', expand=True, fill='x', side='left')
+        # TODO put this somewhere else
+        # # Remove previous region assignments.
+        # for widget in self.__region_frame.winfo_children():
+        #     widget.destroy()
 
         self.update()
         # Move the input NIfTI to the center of the viewer.
         self.__coronal_view.move_to_center()
         self.__annotation = [-1, -1, -1]
 
-    def __track_input(self, variable):
+    def __track_transform(self, variable):
+        """Observe the Entry widget for the path to the input NIfTI.
+
+        :param tkinter.StringVar variable: variable that holds the content of an Entry widget (path to input NIfTI)
+        """
+        pass
+        path = variable.get()
+        # Show the NIfTI when the given path is valid.
+        if self.logic.check_transform_path(path):
+            self.logic.set_transform_path(path)
+
+    def __track_input_warping(self, variable):
         """Observe the Entry widget for the path to the input NIfTI.
 
         :param tkinter.StringVar variable: variable that holds the content of an Entry widget (path to input NIfTI)
@@ -254,8 +327,24 @@ class App(tk.Tk):
             self.__coronal_slider.destroy()
 
             self.__create_viewer()
-            self.__check.set("no")
-            self.__set_mni("no")
+
+    def __track_input(self, variable):
+        """Observe the Entry widget for the path to the input NIfTI.
+
+        :param tkinter.StringVar variable: variable that holds the content of an Entry widget (path to input NIfTI)
+        """
+        path = variable.get()
+        # Show the NIfTI when the given path is valid.
+        if self.logic.check_in_path(path):
+            self.logic.set_in_path(path)
+
+            self.__coronal_view.canvas.destroy()
+            self.__coronal_view.destroy()
+            self.__coronal_slider.destroy()
+
+            self.__create_viewer()
+            self.__check.set('no')
+            self.__set_mni('no')
 
     def __track_output(self, variable):
         """Observe the Entry widget for the path to the output folder.
@@ -268,6 +357,23 @@ class App(tk.Tk):
             # Retry the region assignment for the currently selected point if the output folder changes.
             if self.__annotation != [-1, -1, -1]:
                 self.set_annotation()
+
+    # TODO think if this and __select_file can be merged by adding open_file_path as parameter (lambda: self.file(self.__open_warping))
+    def __select_file_warping(self):
+        """Select an input NIfTI."""
+        # Open the latest given valid folder in the filedialog.
+        folder = '/'
+        if self.__open_file_path_warping.get():
+            folder = os.path.dirname(self.__open_file_path_warping.get())
+
+        filename = filedialog.askopenfilename(filetypes=[('NIfTI', '*.nii *.nii.gz')], initialdir=folder,
+                                              title='Select input NIfTI')
+
+        # Canceling the filedialog returns an empty string.
+        if filename:
+            self.__open_file_path_warping.delete(0, tk.END)
+            filename = os.path.normpath(filename)
+        self.__open_file_path_warping.insert(0, filename)
 
     def __select_file(self):
         """Select an input NIfTI."""
@@ -297,10 +403,26 @@ class App(tk.Tk):
             foldername = os.path.normpath(foldername)
         self.__open_folder_path.insert(0, foldername)
 
+    def __select_transform(self):
+        """Select an output folder."""
+        # Open the latest given valid folder in the filedialog.
+        folder = '~/voluba-mriwarp'
+        if self.__open_transform_path.get():
+            folder = os.path.dirname(self.__open_transform_path.get())
+
+        filename = filedialog.askopenfilename(filetypes=[('transform', '*.h5 *.mat')], initialdir=folder,
+                                              title='Select transformation file')
+
+        # Canceling the filedialog returns an empty string.
+        if filename:
+            self.__open_transform_path.delete(0, tk.END)
+            filename = os.path.normpath(filename)
+        self.__open_transform_path.insert(0, filename)
+
     def __prepare_warping(self):
         """Prepare the logic and widgets and start warping the input NIfTI to MNI152."""
         try:
-            self.logic.set_in_path(self.__open_file_path.get())
+            self.logic.set_in_path(self.__open_file_path_warping.get())
             self.logic.set_out_path(self.__open_folder_path.get())
         except Exception as e:
             logging.getLogger(mriwarp_name).error(
