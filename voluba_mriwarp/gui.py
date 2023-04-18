@@ -155,7 +155,7 @@ class App(tk.Tk):
         ttk.Radiobutton(button_frame, text='T2', variable=self.__sequence,
                         value=2, command=self.__selection).grid(column=1, row=0, sticky='w')
 
-        # dropdown for MNI152 input
+        # widgets for MNI152 input
         tk.Label(self.__warping_frame, bg=siibra_highlight_bg, fg='white', justify='left',
                  text='Input already\nin MNI152:').grid(column=0, row=2, sticky='w', padx=5)
         self.__mni = tk.BooleanVar(value=0)
