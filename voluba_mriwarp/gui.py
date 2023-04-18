@@ -222,10 +222,16 @@ class App(tk.Tk):
                                 bg=siibra_highlight_bg)
         option_frame.pack(fill='x')
         tk.Label(option_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
-                 text='Input already in MNI152:', width=18).grid(row=0, column=0, padx=(15, 10), pady=20)
+                 text='Input already in MNI152:', width=18).grid(row=0, column=0, padx=(15, 10), pady=(20, 0))
         self.__check = tk.StringVar()
         ttk.OptionMenu(option_frame, self.__check, '', 'no', 'yes',
-                       command=self.__set_mni).grid(row=0, column=1, pady=20, sticky='we')
+                       command=self.__set_mni).grid(row=0, column=1, pady=(20, 0), sticky='we')
+        
+        # widgets for the parcellation
+        tk.Label(option_frame, bg=siibra_highlight_bg, fg='white', text='Parcellation:').grid(row=1, column=0, sticky='w', padx=(15, 10), pady=(10, 20))
+        parcellation = tk.StringVar()
+        # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
+        ttk.OptionMenu(option_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(), command=self.__change_parcellation).grid(row=1, column=1, sticky='ew', pady=(10, 20))
 
         # separator
         tk.Frame(self.__assignment_frame, bg=siibra_bg).pack(
@@ -538,7 +544,7 @@ class App(tk.Tk):
 
         # widget for the parcellation
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left',
-                 padx=10, pady=5, text=f'assign to: Julich-Brain 2.9').pack(anchor='n', fill='x')
+                 padx=10, pady=5, text=f'assign to: {self.logic.get_parcellation()}').pack(anchor='n', fill='x')
 
         # separator with optional text
         separator = tk.Label(self.__region_frame, anchor='w', bg=siibra_bg,
@@ -579,9 +585,17 @@ class App(tk.Tk):
         else:
             # no region found
             frame = tk.Frame(self.__region_frame, bg=siibra_highlight_bg)
-            tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5, pady=5,
-                     text=f'No region found', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
-            frame.pack(anchor='n', fill='x', pady=2.5)
+            tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5,
+                     pady=5, text=f'No region found', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
+            frame.pack(anchor='n', fill='x', side='top', pady=2.5)
+
+    def __change_parcellation(self, parcellation):
+        self.logic.set_parcellation(parcellation)
+
+        if self.__annotation != [-1, -1, -1]:
+            for widget in self.__region_frame.winfo_children():
+                widget.destroy()
+            self.__create_assignment()
 
     def on_closing(self):
         """Destroy the main window after asking for quit."""
