@@ -111,13 +111,13 @@ class Logic:
 
     def load_source(self):
         """Load the NIfTI file and convert it to a numpy array."""
-        # Reorient NIfTI to standard orientation
+        # Reorient NIfTI to standard orientation.
         self.__nifti_source = nib.funcs.as_closest_canonical(
             nib.load(self.__in_path))
         # Rotate the image to display the correct orientation.
         self.__numpy_source = np.rot90(
             self.__nifti_source.get_fdata(), axes=(0, 2))
-        # Normalize values for PIL
+        # Normalize values for PIL.
         self.__numpy_source *= 255.0/self.__numpy_source.max()
 
     def preload(self):
@@ -125,6 +125,7 @@ class Logic:
         import siibra
         from HD_BET.utils import maybe_download_parameters
 
+        # TODO preload all available parcellations?
         siibra.parcellations['julich 2.9'].get_map(
             'mni152', maptype='continuous')
         maybe_download_parameters(0)
@@ -160,14 +161,17 @@ class Logic:
         return self.__numpy_source
     
     def get_parcellations(self):
+        """Return all available parcellations for MNI152 nonlinear asymmetric."""
         return self.__mni152_parcellations
     
     def set_parcellation(self, parcellation):
+        """Set the parcellation that is used for region assignment."""
         import siibra
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         self.__parcellation = multilevel_human.get_parcellation(parcellation)
 
     def get_parcellation(self):
+        """Return the current parcellation that is used for region assignment."""
         return self.__parcellation
 
     def set_img_type(self, type):

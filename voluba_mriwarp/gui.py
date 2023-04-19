@@ -39,8 +39,10 @@ class App(tk.Tk):
         """Create the instances for the logical backend."""
         self.logic = Logic()
         self.logic.set_in_path(mni_template)
+
         if not os.path.exists(mriwarp_home):
             os.mkdir(mriwarp_home)
+        
         self.logic.set_out_path(mriwarp_home)
         self.__annotation = [-1, -1, -1]
 
@@ -64,6 +66,7 @@ class App(tk.Tk):
         thread = threading.Thread(target=self.logic.preload, daemon=True)
         thread.start()
 
+        # Threading is needed because the window cannot be closed otherwise.
         while thread.is_alive():
             self.update()
 
@@ -103,7 +106,7 @@ class App(tk.Tk):
 
     def __create_viewpanel(self):
         """Create the frame for the NIfTI viewer."""
-        # Update the window to get the real size of it
+        # Update the window to get the real size of it.
         self.update()
         self.__view_panel = tk.Frame(self, bg=warp_bg, height=self.winfo_height(
         ), width=self.winfo_width() - sidepanel_width)
@@ -112,6 +115,7 @@ class App(tk.Tk):
 
     def __create_sidepanel(self):
         """Create the frame and widgets for data selection, warping and region assignment."""
+        # Update the window to get the real size of it.
         self.update()
         side_panel = tk.Frame(self, bg=siibra_highlight_bg,
                               height=self.winfo_height(), width=sidepanel_width)
@@ -217,21 +221,33 @@ class App(tk.Tk):
 
     def __create_assignment_widgets(self):
         """Create widgets for region assignment."""
-        # dropdown for MNI152 input
         option_frame = tk.Frame(self.__assignment_frame,
                                 bg=siibra_highlight_bg)
         option_frame.pack(fill='x')
+
+        # widgets for MNI152 input
         tk.Label(option_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
-                 text='Input already in MNI152:', width=18).grid(row=0, column=0, padx=(15, 10), pady=(20, 0))
-        self.__check = tk.StringVar()
-        ttk.OptionMenu(option_frame, self.__check, '', 'no', 'yes',
-                       command=self.__set_mni).grid(row=0, column=1, pady=(20, 0), sticky='we')
-        
-        # widgets for the parcellation
-        tk.Label(option_frame, bg=siibra_highlight_bg, fg='white', text='Parcellation:').grid(row=1, column=0, sticky='w', padx=(15, 10), pady=(10, 20))
+                 text='Input already\nin MNI152:', width=11).grid(column=0, row=0, sticky='w', padx=(15, 10), pady=(20, 0))
+        button_frame = tk.Frame(option_frame, bg=siibra_highlight_bg)
+        button_frame.grid(column=1, row=0, sticky='w', padx=10, pady=(20, 0))
+        s = ttk.Style(self)
+        s.configure("TRadiobutton", background=siibra_highlight_bg,
+                    foreground='white')
+        self.__mni = tk.BooleanVar(value=0)
+        ttk.Radiobutton(button_frame, text='no', variable=self.__mni, value=0,
+                        command=self.__set_mni).grid(column=0, row=0, sticky='w')
+        ttk.Radiobutton(button_frame, text='yes', variable=self.__mni,
+                        value=1, command=self.__set_mni).grid(column=1, row=0, sticky='w', padx=(10, 0))
+
+        # widgets for the parcellation selection
+        tk.Label(option_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
+                 text='Parcellation:', width=11).grid(row=1, column=0, sticky='w', padx=(15, 10), pady=(10, 20))
         parcellation = tk.StringVar()
         # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
-        ttk.OptionMenu(option_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(), command=self.__change_parcellation).grid(row=1, column=1, sticky='ew', pady=(10, 20))
+        p_options = ttk.OptionMenu(option_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(),
+                       command=self.__change_parcellation)
+        p_options.configure(width=40)
+        p_options.grid(row=1, column=1, sticky='we', pady=(10, 20))
 
         # separator
         tk.Frame(self.__assignment_frame, bg=siibra_bg).pack(
@@ -252,7 +268,7 @@ class App(tk.Tk):
         self.__warping_frame.grid_remove()
         self.__assignment_frame.grid()
 
-    def __set_mni(self, value):
+    def __set_mni(self):
         """Retry the region assignment for the currently selected point if the image type changes."""
         if self.__annotation != [-1, -1, -1]:
             self.set_annotation()
@@ -306,8 +322,8 @@ class App(tk.Tk):
             self.__coronal_slider.destroy()
 
             self.__create_viewer()
-            self.__check.set('no')
-            self.__set_mni('no')
+            self.__mni.set(0)
+            self.__set_mni()
 
     def __track_output(self, variable):
         """Observe the Entry widget for the path to the output folder.
@@ -447,7 +463,7 @@ class App(tk.Tk):
     def set_annotation(self):
         """Set the annotation and start the region assignment."""
         type = 'template' if self.logic.get_in_path(
-        ) == mni_template else 'aligned' if self.__check.get() == 'yes' else 'unaligned'
+        ) == mni_template else 'aligned' if self.__mni.get() == 1 else 'unaligned'
         self.logic.set_img_type(type)
         self.__annotation = self.__coronal_view.get_annotation()
         # The origin in the viewer is upper left but the image origin is lower left.
@@ -519,7 +535,7 @@ class App(tk.Tk):
                 f'Error during region calculation: {str(e)}')
             messagebox.showerror('Error', f'The following error occurred during region calculation:\n\n{str(e)}\n\n'
                                           f'If you need help, please contact support@ebrains.eu.')
-            # No region can be found when an error occurs
+            # No region can be found when an error occurs.
             tk.Label(self.__region_frame, anchor='w', bg='red', borderwidth=10, fg='black',
                      font=font_10_b, text='No region found').pack(anchor='n', fill='x')
 
@@ -552,13 +568,15 @@ class App(tk.Tk):
         separator.pack(anchor='n', fill='x')
 
         # widgets for assigned regions
+        region_frame = tk.Frame(self.__region_frame, bg=siibra_bg)
+        region_frame.pack(anchor='n', fill='x')
         if probabilities:
             # in MNI152
             if len(probabilities) == 1 and probabilities[0][1] == 1:
                 separator.configure(text='\nbrain region')
 
                 (region, probabilitiy, url) = probabilities[0]
-                frame = tk.Frame(self.__region_frame, bg=siibra_highlight_bg)
+                frame = tk.Frame(region_frame, bg=siibra_highlight_bg)
                 tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5,
                          pady=5, text=region, wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
                 # link to region in siibra-explorer
@@ -566,14 +584,14 @@ class App(tk.Tk):
                                    command=lambda: webbrowser.open(url), image=self.__link_icon)
                 button.image = self.__link_icon
                 button.pack(anchor='center', side='right', padx=5)
-                frame.pack(anchor='n', fill='x', pady=2.5)
+                frame.pack(anchor='n', fill='x', pady=(0, 5))
                 return
             # in input brain scan
             separator.configure(
                 text='\nvalue of probability map - brain region')
 
             for (region, probabilitiy, url) in probabilities:
-                frame = tk.Frame(self.__region_frame, bg=siibra_highlight_bg)
+                frame = tk.Frame(region_frame, bg=siibra_highlight_bg)
                 tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5, pady=5,
                          text=f'{probabilitiy * 100:.2f}% - {region}', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
                 # link to region in siibra-explorer
@@ -581,17 +599,22 @@ class App(tk.Tk):
                                    command=lambda url=url: webbrowser.open(url), image=self.__link_icon)
                 button.image = self.__link_icon
                 button.pack(anchor='center', side='right', padx=5)
-                frame.pack(anchor='n', fill='x', pady=2.5)
+                frame.pack(anchor='n', fill='x', pady=(0, 5))
         else:
             # no region found
-            frame = tk.Frame(self.__region_frame, bg=siibra_highlight_bg)
+            frame = tk.Frame(region_frame, bg=siibra_highlight_bg)
             tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5,
                      pady=5, text=f'No region found', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
-            frame.pack(anchor='n', fill='x', side='top', pady=2.5)
+            frame.pack(anchor='n', fill='x', side='top', pady=(0, 5))
 
     def __change_parcellation(self, parcellation):
+        """Change the current parcellation that is used for region assignment.
+        
+        :param str parcellation: parcellation for region assignment
+        """
         self.logic.set_parcellation(parcellation)
 
+        # Rerun region assignment if parcellation is changed.
         if self.__annotation != [-1, -1, -1]:
             for widget in self.__region_frame.winfo_children():
                 widget.destroy()
