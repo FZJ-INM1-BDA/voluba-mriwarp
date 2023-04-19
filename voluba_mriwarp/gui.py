@@ -42,7 +42,8 @@ class App(tk.Tk):
 
         if not os.path.exists(mriwarp_home):
             os.mkdir(mriwarp_home)
-        
+        if not os.path.exists(parameter_home):
+            os.mkdir(parameter_home)
         self.logic.set_out_path(mriwarp_home)
         self.__annotation = [-1, -1, -1]
 
@@ -103,6 +104,10 @@ class App(tk.Tk):
             'external-link-alt', fill=siibra_fg, scale_to_width=15)
         self.__help_icon = icon_to_image(
             'question-circle', fill=siibra_fg, scale_to_width=20)
+        self.__caret_right = icon_to_image(
+            'caret-right', fill='white', scale_to_width=7)
+        self.__caret_down = icon_to_image(
+            'caret-down', fill='white', scale_to_width=11)
 
     def __create_viewpanel(self):
         """Create the frame for the NIfTI viewer."""
@@ -205,10 +210,39 @@ class App(tk.Tk):
 
     def __create_warping_widgets(self):
         """Create widgets for warping."""
+        # widgets for advanced registration
+        advanced_frame = tk.Frame(self.__warping_frame, bg=siibra_highlight_bg, highlightbackground=siibra_bg, highlightthickness=2)
+        advanced_frame.pack(fill='x', padx=10, pady=(20, 0))
+        # button to expand parameter file selection
+        self.__json_btn = tk.Button(advanced_frame, bd=0, command=self.__change_advanced, text=' Advanced registration settings ',
+                                    padx=2.5, bg=siibra_highlight_bg, fg='white', image=self.__caret_right, compound='left', anchor='w')
+        self.__json_btn.grid(column=0, row=0, sticky='w')
+        # widgets for parameter file selection
+        self.__param_frame = tk.Frame(advanced_frame, bg=siibra_highlight_bg)
+        self.__param_frame.grid(column=0, row=1)
+        json_file = tk.StringVar()
+        label = tk.Label(self.__param_frame, bg=siibra_highlight_bg,
+                         fg='white', text='Parameters: ', width=11)
+        label.grid(column=0, row=1, padx=(0, 10), pady=5, sticky='w')
+        if platform.system() == 'Linux':
+            self.__open_json_path = tk.Entry(
+                self.__param_frame, bd=0, textvariable=json_file, width=38)
+        else:
+            self.__open_json_path = tk.Entry(
+                self.__param_frame, bd=0, textvariable=json_file, width=56)
+        self.__open_json_path.insert(
+            0, os.path.join(parameter_home, 'default.json'))
+        self.__open_json_path.grid(column=1, row=1, pady=5)
+        button = tk.Button(
+            self.__param_frame, bd=0, command=self.__select_json, text='...', padx=2.5)
+        button.grid(column=2, row=1, padx=10, pady=5, sticky='e')
+        self.__param_frame.grid_remove()
+        self.__json_showing = False
+
         # widgets for warping to MNI152
         self.__warp_button = tk.Button(
             self.__warping_frame, bd=0, command=self.__prepare_warping, text='Warp input to MNI152 space', padx=2.5)
-        self.__warp_button.pack(fill='x', padx=10, pady=20)
+        self.__warp_button.pack(fill='x', padx=10, pady=(10, 20))
         self.__check_mark = None
 
         # separator
@@ -245,7 +279,7 @@ class App(tk.Tk):
         parcellation = tk.StringVar()
         # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
         p_options = ttk.OptionMenu(option_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(),
-                       command=self.__change_parcellation)
+                                   command=self.__change_parcellation)
         p_options.configure(width=40)
         p_options.grid(row=1, column=1, sticky='we', pady=(10, 20))
 
@@ -267,6 +301,17 @@ class App(tk.Tk):
         """Bring the assignment frame to the foreground."""
         self.__warping_frame.grid_remove()
         self.__assignment_frame.grid()
+
+    def __change_advanced(self):
+        """Show/Hide selection for parameter JSON."""
+        if self.__json_showing:
+            self.__json_btn.config(image=self.__caret_right)
+            self.__param_frame.grid_remove()
+            self.__json_showing = False
+        else:
+            self.__json_btn.config(image=self.__caret_down)
+            self.__param_frame.grid()
+            self.__json_showing = True
 
     def __set_mni(self):
         """Retry the region assignment for the currently selected point if the image type changes."""
@@ -337,6 +382,22 @@ class App(tk.Tk):
             if self.__annotation != [-1, -1, -1]:
                 self.set_annotation()
 
+    def __select_json(self):
+        """Select a parameter JSON."""
+        # Open the latest given valid folder in the filedialog.
+        folder = '/'
+        if self.__open_json_path.get():
+            folder = os.path.dirname(self.__open_json_path.get())
+
+        filename = filedialog.askopenfilename(filetypes=[('JSON', '*.json')], initialdir=folder,
+                                              title='Select parameter JSON')
+
+        # Canceling the filedialog returns an empty string.
+        if filename:
+            self.__open_json_path.delete(0, tk.END)
+            filename = os.path.normpath(filename)
+        self.__open_json_path.insert(0, filename)
+
     def __select_file(self):
         """Select an input NIfTI."""
         # Open the latest given valid folder in the filedialog.
@@ -370,9 +431,10 @@ class App(tk.Tk):
         try:
             self.logic.set_in_path(self.__open_file_path.get())
             self.logic.set_out_path(self.__open_folder_path.get())
+            self.logic.set_json_path(self.__open_json_path.get())
         except Exception as e:
             logging.getLogger(mriwarp_name).error(
-                f'Error during in/out path definition: {str(e)}')
+                f'Error during path definition: {str(e)}')
             messagebox.showerror('Error', str(e))
             return
 
@@ -609,7 +671,7 @@ class App(tk.Tk):
 
     def __change_parcellation(self, parcellation):
         """Change the current parcellation that is used for region assignment.
-        
+
         :param str parcellation: parcellation for region assignment
         """
         self.logic.set_parcellation(parcellation)
