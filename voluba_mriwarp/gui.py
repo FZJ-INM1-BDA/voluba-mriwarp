@@ -158,20 +158,10 @@ class App(tk.Tk):
         self.__create_assignment_widgets()
         self.__show_warping_frame()
 
-        # logos
-        side_panel.rowconfigure(1, weight=1)
-        logo_frame = tk.Frame(side_panel, bg=siibra_highlight_bg)
-        logo_frame.grid(row=3, column=0, sticky='swe')
-        hbp_img = Image.open(hbp_ebrains_color)
-        hbp_img = PhotoImage(hbp_img.resize(
-            size=(hbp_img.size[0] // 25, hbp_img.size[1] // 25)))
-        img_hbp = tk.Label(logo_frame, bg=siibra_highlight_bg, image=hbp_img)
-        img_hbp.image = hbp_img
-        img_hbp.pack(anchor='s', side='left')
-
         # help icon
-        tk.Button(logo_frame, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'https://voluba-mriwarp.readthedocs.io')).pack(anchor='s', side='right', pady=25, padx=(0, 25))
+        side_panel.rowconfigure(1, weight=1)
+        tk.Button(side_panel, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
+            'https://voluba-mriwarp.readthedocs.io'), anchor='se').grid(row=3, column=0, sticky='se', pady=25, padx=(0, 25))
 
     def __create_data_widgets(self):
         """Create widgets for data selection."""

@@ -14,7 +14,6 @@ warp_bg = 'black'
 # logos
 mriwarp_icon = f'./data/{mriwarp_name}.ico'
 mriwarp_logo_inv = f'./data/{mriwarp_name}-inv.png'
-hbp_ebrains_color = './data/hbp_ebrains_color.png'
 
 # fonts
 font_10_b = ('', 10, 'bold')
