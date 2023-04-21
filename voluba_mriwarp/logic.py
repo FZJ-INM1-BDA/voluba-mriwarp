@@ -78,7 +78,9 @@ class Logic:
         if self.check_in_path(in_path):
             self.__in_path = in_path
             self.__set_name()
-            self.__set_transform_path()
+            transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
+                         f'_transformationInverseComposite.h5'
+            self.set_transform_path(transform_path)
             self.load_source()
         else:
             raise ValueError(self.__error)
@@ -128,12 +130,30 @@ class Logic:
             if not 'stages' in value.keys():
                 return False
         return True
+    
+    def check_transform_path(self, transform_path):
+        """Check if the transformation file path is valid.
 
-    def __set_transform_path(self):
+        :param str transform_path: path to the transformation file
+        :return bool: True if valid, False otherwise.
+        """
+        self.__error = ''
+
+        if not transform_path:
+            self.__error += f'Please enter a transformation file.\n'
+        if not os.path.exists(transform_path):
+            self.__error += f'{transform_path} could not be found.\n'
+        elif not os.path.isfile(transform_path) or not (transform_path.endswith('.h5') or transform_path.endswith('.mat')):
+            self.__error += f'{transform_path} is not a h5 or mat file.\n'
+
+        if self.__error:
+            return False
+        else:
+            return True
+
+    def set_transform_path(self, transform_path):
         """Set the path to the transform matrix."""
-        transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
-                         f'_transformationInverseComposite.h5'
-        if os.path.exists(transform_path):
+        if self.check_transform_path(transform_path):
             self.__transform_path = transform_path
         else:
             self.__transform_path = ''
@@ -146,7 +166,9 @@ class Logic:
         """
         if self.check_out_path(out_path):
             self.__out_path = out_path
-            self.__set_transform_path()
+            transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
+                         f'_transformationInverseComposite.h5'
+            self.set_transform_path(transform_path)
         else:
             raise ValueError(self.__error)
 
@@ -233,6 +255,11 @@ class Logic:
                 'Image type must be "template", "aligned" or "unaligned"')
         else:
             self.__img_type = type
+
+    def get_img_type(self):
+        """Return the image type.
+        """
+        return self.__img_type
 
     def save_paths(self):
         """Save the current input and output path for calculation as the user may inspect a different volume during calculation."""
