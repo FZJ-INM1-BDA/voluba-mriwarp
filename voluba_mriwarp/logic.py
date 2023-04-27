@@ -173,18 +173,19 @@ class Logic:
         import siibra
         from HD_BET.utils import maybe_download_parameters
 
-        # TODO preload all available parcellations?
-        siibra.parcellations['julich 2.9'].get_map(
-            'mni152', maptype='continuous')
         maybe_download_parameters(0)
 
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
-        mni152 = multilevel_human.spaces.MNI152_2009C_NONL_ASYM
+        mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
 
         self.__mni152_parcellations = []
         for parcellation in multilevel_human.parcellations:
-            if parcellation.supports_space(mni152):
-                self.__mni152_parcellations.append(parcellation.name)
+            pmap = siibra.get_map(parcellation, mni152, maptype='statistical')
+            if parcellation.supports_space(mni152) and pmap:
+                    self.__mni152_parcellations.append(parcellation.shortname)
+                    # Cache the pmaps
+                    # if isinstance(pmap, siibra.volumes.sparsemap.SparseMap):
+                    #     _ = pmap.sparse_index
 
         self.set_parcellation(self.__mni152_parcellations[0])
 
@@ -387,67 +388,35 @@ class Logic:
         import siibra_explorer_toolsuite
 
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
-        mni152 = multilevel_human.spaces.MNI152_2009C_NONL_ASYM
+        mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
 
         # Transform from patient's voxel to patient's physical space.
         source_coords_ras = self.vox2phys(coords)
 
         if self.__img_type == 'unaligned':
-            pmaps = self.__parcellation.get_map(mni152, maptype='continuous')
+            maptype = 'statistical'
             target_coords_ras = self.__phys2mni(source_coords_ras)
-            target = siibra.Point(target_coords_ras[0], space=mni152)
-            try:
-                assignments = pmaps.assign(target)
-            except IndexError:
-                raise PointNotFoundError('Point doesn\'t match MNI152 space.')
-            results = assignments.sort_values('MaxValue', ascending=False)
-
-            if results.empty:
-                probabilities = None
-            else:
-                probabilities = []
-                for i in range(len(results)):
-                    region = self.__parcellation.decode_region(results.iloc[i].Region)
-                    probability = results.iloc[i].MaxValue
-                    url = siibra_explorer_toolsuite.run(
-                        multilevel_human, mni152, self.__parcellation, region)
-                    probabilities.append([region, probability, url])
         elif self.__img_type == 'aligned':
-            pmaps = self.__parcellation.get_map(mni152, maptype='continuous')
+            maptype='statistical'
             target_coords_ras = source_coords_ras
-            target = siibra.Point(target_coords_ras[0], space=mni152)
-            try:
-                assignments = pmaps.assign(target)
-            except IndexError:
-                raise PointNotFoundError('Point doesn\'t match MNI152 space.')
-            results = assignments.sort_values('MaxValue', ascending=False)
-
-            if results.empty:
-                probabilities = None
-            else:
-                probabilities = []
-                for i in range(len(results)):
-                    region = self.__parcellation.decode_region(results.iloc[i].Region)
-                    probability = results.iloc[i].MaxValue
-                    url = siibra_explorer_toolsuite.run(
-                        multilevel_human, mni152, self.__parcellation, region)
-                    probabilities.append([region, probability, url])
         else:
-            mpmaps = self.__parcellation.get_map(mni152, maptype='labelled')
+            maptype='labeled'
             target_coords_ras = source_coords_ras
-            target = siibra.Point(target_coords_ras[0], space=mni152)
-            try:
-                assignments = mpmaps.assign_coordinates(target)
-            except IndexError:
-                raise PointNotFoundError('Point doesn\'t match MNI152 space.')
 
-            try:
-                region = self.__parcellation.decode_region(assignments[0][0][0])
-            except IndexError:
-                probabilities = None
-            else:
-                probabilities = []
-                probability = 1
+        map = siibra.get_map(self.__parcellation, mni152, maptype=maptype)
+        target = siibra.Point(target_coords_ras[0], space=mni152)
+        try:
+            assignments = map.assign(target)
+        except IndexError:
+            raise PointNotFoundError('Point doesn\'t match MNI152 space.')
+        results = assignments.sort_values(by='map value', ascending=False)
+        if results.empty:
+            probabilities = None
+        else:
+            probabilities = []
+            for i in range(len(results)):
+                region = results.iloc[i]['region']
+                probability = results.iloc[i]['map value']
                 url = siibra_explorer_toolsuite.run(
                     multilevel_human, mni152, self.__parcellation, region)
                 probabilities.append([region, probability, url])

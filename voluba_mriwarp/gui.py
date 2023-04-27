@@ -267,7 +267,6 @@ class App(tk.Tk):
         tk.Label(option_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
                  text='Parcellation:', width=11).grid(row=1, column=0, sticky='w', padx=(15, 10), pady=(10, 20))
         parcellation = tk.StringVar()
-        # TODO Julich Brain 2.5, DiFuMo 512, Desikan-Killiany 2006, VEP Atlas (1, 3, 4 not part of siibra-explorer) don't work
         p_options = ttk.OptionMenu(option_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(),
                                    command=self.__change_parcellation)
         p_options.configure(width=40)
