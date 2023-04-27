@@ -183,11 +183,11 @@ class Logic:
             pmap = siibra.get_map(parcellation, mni152, maptype='statistical')
             if parcellation.supports_space(mni152) and pmap:
                     self.__mni152_parcellations.append(parcellation.shortname)
-                    # Cache the pmaps
+                    # TODO Cache the pmaps
                     # if isinstance(pmap, siibra.volumes.sparsemap.SparseMap):
                     #     _ = pmap.sparse_index
 
-        self.set_parcellation(self.__mni152_parcellations[0])
+        self.set_parcellation('julich 2.9')
 
     def get_in_path(self):
         """Return the path to the input NIfTI."""
@@ -221,7 +221,7 @@ class Logic:
 
     def get_parcellation(self):
         """Return the current parcellation that is used for region assignment."""
-        return self.__parcellation
+        return self.__parcellation.shortname
 
     def set_img_type(self, type):
         """Set the image type.
@@ -400,7 +400,7 @@ class Logic:
             maptype='statistical'
             target_coords_ras = source_coords_ras
         else:
-            maptype='labeled'
+            maptype='labelled'
             target_coords_ras = source_coords_ras
 
         map = siibra.get_map(self.__parcellation, mni152, maptype=maptype)
