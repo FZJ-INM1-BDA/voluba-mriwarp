@@ -108,6 +108,10 @@ class App(tk.Tk):
             'caret-right', fill='white', scale_to_width=7)
         self.__caret_down = icon_to_image(
             'caret-down', fill='white', scale_to_width=11)
+        self.__save_icon = icon_to_image(
+            'save', fill=siibra_bg, scale_to_width=15)
+        self.__trash_icon = icon_to_image(
+            'trash', fill='white', scale_to_width=15)
 
     def __create_viewpanel(self):
         """Create the frame for the NIfTI viewer."""
@@ -156,12 +160,16 @@ class App(tk.Tk):
             operation_frame, bg=siibra_highlight_bg)
         self.__assignment_frame.grid(row=2, column=0, sticky='nwe')
         self.__create_assignment_widgets()
-        self.__show_warping_frame()
 
         # help icon
         side_panel.rowconfigure(1, weight=1)
+        self.__save_frame = tk.Frame(side_panel, bg=siibra_bg)
+        self.__save_frame.grid(row=3, column=0, sticky='swe', pady=20)
+        tk.Label(self.__save_frame, bg=siibra_bg, fg='white', text="Saved assignments").pack(padx=10, pady=10)
         tk.Button(side_panel, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'https://voluba-mriwarp.readthedocs.io'), anchor='se').grid(row=3, column=0, sticky='se', pady=25, padx=(0, 25))
+            'https://voluba-mriwarp.readthedocs.io'), anchor='se').grid(row=4, column=0, sticky='se', pady=25, padx=(0, 25))
+        
+        self.__show_warping_frame()
 
     def __create_data_widgets(self):
         """Create widgets for data selection."""
@@ -312,11 +320,13 @@ class App(tk.Tk):
         """Bring the warping frame to the foreground."""
         self.__assignment_frame.grid_remove()
         self.__warping_frame.grid()
+        self.__save_frame.grid_remove()
 
     def __show_assignment_frame(self):
         """Bring the assignment frame to the foreground."""
         self.__warping_frame.grid_remove()
         self.__assignment_frame.grid()
+        self.__save_frame.grid()
 
     def __change_advanced(self):
         """Show/Hide selection for parameter JSON."""
@@ -627,12 +637,41 @@ class App(tk.Tk):
             coords[i] = round(coords[i], 2)
 
         # widget for the annotated point in physical space
-        tk.Label(self.__region_frame, anchor='w', bg='gold', fg=siibra_bg, font=font_12_b, padx=10, pady=10,
-                 justify='left', text=f'Point {tuple(coords)} [mm]', wraplength=sidepanel_width - 20).pack(anchor='n', fill='x')
+        frame = tk.Frame(self.__region_frame, bg='gold')
+        frame.pack(anchor='n', fill='x')
+        tk.Label(frame, anchor='w', bg='gold', fg=siibra_bg, font=font_12_b, padx=10, pady=10,
+                 justify='left', text=f'Point {tuple(coords)} [mm]', wraplength=sidepanel_width - 20).pack(anchor='n', side='left', fill='x')
+        # TODO disable button when region assignment is not successful? --> No, we can also print "No region found" or error in report.
+        tk.Button(frame, anchor='e', bg='gold', image=self.__save_icon, relief='flat', command=lambda: self.__save_point(tuple(coords))).pack(anchor='center', side='right', padx=10)
 
         # widget for the current filename
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5, pady=5,
                  text=f'in: {os.path.basename(self.logic.get_in_path())}').pack(anchor='n', fill='x', padx=5, pady=(5, 0))
+        
+    def __remove_point(self, point):
+        idx = self.logic.saved_points.index(point)
+        self.logic.saved_points.pop(idx)
+        self.__save_frame.winfo_children()[idx+1].destroy()
+        
+    def __save_point(self, point):
+        # TODO save parcellation, filename etc.? 
+        # --> save filename, point in subject, point in mni, parcellation and assigned regions --> we don't need to redo assignment, but more memory
+        # --> only save filename, point, parcellation --> less memory, but redo assignment
+        self.logic.saved_points.append(point)   # TODO move this to logic
+        idx = len(self.logic.saved_points)
+
+        frame = tk.Frame(self.__save_frame, bg=siibra_highlight_bg)
+        frame.pack(padx=10, pady=5)
+        tk.Label(frame, bg=siibra_highlight_bg, fg='white', text=f'{point}').grid(row=idx+1, column=0)
+        tk.Button(frame, bg=siibra_highlight_bg, image=self.__trash_icon, command=lambda: self.__remove_point(point)).grid(row=idx+1, column=1)
+        
+        # TODO saved points should be displayed all the time?
+        # TODO what if points are across different files? Do we support this? 
+        # --> Maybe first implement that points are deleted when different file is loaded?
+        # Or at least when region assignment is done in different file ...
+        # TODO Before export: For each point let user choose assignment/region that should be exported ()
+        # TODO Before export: Let user choose what will be exported (mit Häkchen): Connectivity, cell densities, receptor densities
+        # [x] connectivity [x] cell densities [x] receptor densities
 
     def __animate(self):
         """Show three animated dots to indicate running region assignment."""

@@ -28,6 +28,7 @@ class Logic:
         self.__img_type = ''
         self.__parameters = None
         self.__error = ''
+        self.saved_points = []  # TODO make this private and write getter/setter
 
     def check_in_path(self, in_path):
         """Check if the input path is valid.
