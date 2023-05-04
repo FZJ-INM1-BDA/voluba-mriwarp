@@ -28,7 +28,7 @@ class Logic:
         self.__img_type = ''
         self.__parameters = None
         self.__error = ''
-        self.saved_points = []  # TODO make this private and write getter/setter
+        self.__saved_points = []
 
     def check_in_path(self, in_path):
         """Check if the input path is valid.
@@ -153,7 +153,10 @@ class Logic:
             return True
 
     def set_transform_path(self, transform_path):
-        """Set the path to the transform matrix."""
+        """Set the path to the transform matrix.
+        
+        :param str transform_path: path to the transform matrix
+        """
         if self.check_transform_path(transform_path):
             self.__transform_path = transform_path
         else:
@@ -236,7 +239,10 @@ class Logic:
         return self.__mni152_parcellations
     
     def set_parcellation(self, parcellation):
-        """Set the parcellation that is used for region assignment."""
+        """Set the parcellation that is used for region assignment.
+        
+        :param str parcellation: name of the parcellation to use
+        """
         import siibra
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         self.__parcellation = multilevel_human.get_parcellation(parcellation)
@@ -258,9 +264,33 @@ class Logic:
             self.__img_type = type
 
     def get_img_type(self):
-        """Return the image type.
-        """
+        """Return the image type."""
         return self.__img_type
+    
+    def save_point(self, point):
+        """Save a selected point.
+        
+        :param tuple point: point to save
+        """
+        self.__saved_points.append(point)
+
+    def delete_point(self, point):
+        """Delete a saved point.
+        
+        :param tuple point: point to delete
+        :return int: index of the point in the list of saved points
+        """
+        idx = self.__saved_points.index(point)
+        self.__saved_points.pop(idx)
+        return idx
+    
+    def get_num_points(self):
+        """Get number of saved points"""
+        return len(self.__saved_points)
+    
+    def delete_points(self):
+        """Delete all saved points."""
+        self.__saved_points = []
 
     def save_paths(self):
         """Save the current input and output path for calculation as the user may inspect a different volume during calculation."""
