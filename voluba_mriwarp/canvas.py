@@ -164,6 +164,19 @@ class CanvasImage:
         self.canvas.scan_dragto(event.x, event.y, gain=1)
         self.__show_image()
 
+    def draw(self, x, slice, y):
+        """Draw a point on the canvas."""
+        self.__annotation = [x, slice, y]
+
+        bbox = self.canvas.coords(self.container)
+        x = x * self.zoom + bbox[0]
+        y = y * self.zoom + bbox[1]
+
+        self.canvas.delete('annotation')
+        self.canvas.create_oval(x - 3, y - 3, x + 3,
+                                y + 3, width=0, fill='gold', tags='annotation')
+        self.__image_frame.master.master.set_annotation()
+
     def __annotate(self, event):
         """Annotate a point on the canvas."""
         x = self.canvas.canvasx(event.x)
@@ -317,3 +330,7 @@ class View(ttk.Frame):
     def get_annotation(self):
         """Return the current annotation."""
         return self.canvas.get_annotation()
+    
+    def draw_annotation(self, x, slice, y):
+        """Draw the given annotation onto the canvas."""
+        self.canvas.draw(x, slice, y)

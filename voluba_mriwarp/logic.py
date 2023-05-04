@@ -383,9 +383,9 @@ class Logic:
             self.__transform_path = transform+'InverseComposite.h5'
 
     def __phys2mni(self, source_coords_ras):
-        """Warp coordinates from patient's physical to MNI152 space using the transform matrix.
+        """Warp coordinates from subject's physical to MNI152 space using the transform matrix.
 
-        :param list source_coords_ras: coordinates in patient's physical space (RAS)
+        :param list source_coords_ras: coordinates in subject's physical space (RAS)
         :return list: warped coordinates in MNI152 space (RAS)
         :raise mriwarp.SubprocessFailedError: if execution of antsApplyTransformsToPoints failed
         """
@@ -424,18 +424,28 @@ class Logic:
         return (target_coords_lbs * (-1, -1, 1)).tolist()
 
     def vox2phys(self, coords):
-        """Warp coordinates from patient's voxel to physical space.
+        """Warp coordinates from subject's voxel to physical space.
 
-        :param list source_coords_ras: coordinates in RAS space
-        :return list: warped coordinates in RAS space
+        :param list source_coords_ras: coordinates in voxel space
+        :return list: warped coordinates in physical space
         """
         vox2phys = self.__nifti_source.affine
         return [nib.affines.apply_affine(vox2phys, coords)]
+    
+    def phys2vox(self, coords):
+        """Warp coordinates from subject's physical to voxel space.
+
+        :param list source_coords_ras: coordinates in physical space
+        :return list: warped coordinates in voxel space
+        """
+        vox2phys = self.__nifti_source.affine
+        phys2vox = np.linalg.inv(vox2phys)
+        return [nib.affines.apply_affine(phys2vox, coords)]
 
     def get_regions(self, coords):
-        """Assign patient voxel coordinates to regions in the Julich Brain Atlas.
+        """Assign subject voxel coordinates to regions in the Julich Brain Atlas.
 
-        :param list coords: coordinates in patient's voxel space
+        :param list coords: coordinates in subject's voxel space
         :return list, list, list: source coordinates in RAS, target coordinates in RAS and the assigned regions
         with their probabilities and url to siibra-explorer
         :raise PointNotFoundError: if the given point is outside the brain
@@ -447,7 +457,7 @@ class Logic:
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = multilevel_human.spaces.MNI152_2009C_NONL_ASYM
 
-        # Transform from patient's voxel to patient's physical space.
+        # Transform from subject's voxel to subject's physical space.
         source_coords_ras = self.vox2phys(coords)
 
         if self.__img_type == 'unaligned':

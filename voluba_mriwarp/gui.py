@@ -680,7 +680,6 @@ class App(tk.Tk):
         for widget in widgets:
             widget.destroy()
         
-        
     def __save_point(self, point):
         """Save a point and add its corresponding widgets.
         
@@ -700,7 +699,7 @@ class App(tk.Tk):
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[0]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[1]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[2]), width=10, state='readonly'),
-            tk.Button(self.__point_frame, image=self.__brain_icon, state='disabled', relief='sunken'),              # TODO implement reloading of assignment
+            tk.Button(self.__point_frame, image=self.__brain_icon, relief='sunken', command=lambda: self.__reload_assignment(point)),
             tk.Button(self.__point_frame, image=self.__trash_icon, command=lambda: self.__remove_point(point))
         ]
         for i, widget in enumerate(widgets):
@@ -720,6 +719,14 @@ class App(tk.Tk):
         # 1. Let user choose which regions to export for selected points --> Idea: display assignment in table with checkmarks for export --> make sorting possible (easier with Qt ...)
         # 2. Let user choose which features to show for selected regions
         # [x] connectivity (StreamlineCounts/StreamlineLengths/FunctionalConnectivity?) [x] cell densities (Profile?) [x] receptor densities (Profile/Fingerprint?)
+
+    def __reload_assignment(self, point):
+        x, slice, y = self.logic.phys2vox(point)[0]
+        y = self.logic.get_numpy_source().shape[0] - y # The origin in the viewer is upper left but the image origin is lower left.
+        self.__coronal_slider.set(slice+1) # The slider starts at 1.
+
+        # redraw annotation on canvas
+        self.__coronal_view.draw_annotation(x, slice, y)
 
     def __animate(self):
         """Show three animated dots to indicate running region assignment."""
