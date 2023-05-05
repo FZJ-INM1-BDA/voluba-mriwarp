@@ -28,6 +28,7 @@ class Logic:
         self.__img_type = ''
         self.__parameters = None
         self.__error = ''
+        self.__saved_points = []
 
     def check_in_path(self, in_path):
         """Check if the input path is valid.
@@ -78,7 +79,9 @@ class Logic:
         if self.check_in_path(in_path):
             self.__in_path = in_path
             self.__set_name()
-            self.__set_transform_path()
+            transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
+                         f'_transformationInverseComposite.h5'
+            self.set_transform_path(transform_path)
             self.load_source()
         else:
             raise ValueError(self.__error)
@@ -128,12 +131,33 @@ class Logic:
             if not 'stages' in value.keys():
                 return False
         return True
+    
+    def check_transform_path(self, transform_path):
+        """Check if the transformation file path is valid.
 
-    def __set_transform_path(self):
-        """Set the path to the transform matrix."""
-        transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
-                         f'_transformationInverseComposite.h5'
-        if os.path.exists(transform_path):
+        :param str transform_path: path to the transformation file
+        :return bool: True if valid, False otherwise.
+        """
+        self.__error = ''
+
+        if not transform_path:
+            self.__error += f'Please enter a transformation file.\n'
+        if not os.path.exists(transform_path):
+            self.__error += f'{transform_path} could not be found.\n'
+        elif not os.path.isfile(transform_path) or not (transform_path.endswith('.h5') or transform_path.endswith('.mat')):
+            self.__error += f'{transform_path} is not a h5 or mat file.\n'
+
+        if self.__error:
+            return False
+        else:
+            return True
+
+    def set_transform_path(self, transform_path):
+        """Set the path to the transform matrix.
+        
+        :param str transform_path: path to the transform matrix
+        """
+        if self.check_transform_path(transform_path):
             self.__transform_path = transform_path
         else:
             self.__transform_path = ''
@@ -146,7 +170,9 @@ class Logic:
         """
         if self.check_out_path(out_path):
             self.__out_path = out_path
-            self.__set_transform_path()
+            transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
+                         f'_transformationInverseComposite.h5'
+            self.set_transform_path(transform_path)
         else:
             raise ValueError(self.__error)
 
@@ -214,7 +240,10 @@ class Logic:
         return self.__mni152_parcellations
     
     def set_parcellation(self, parcellation):
-        """Set the parcellation that is used for region assignment."""
+        """Set the parcellation that is used for region assignment.
+        
+        :param str parcellation: name of the parcellation to use
+        """
         import siibra
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         self.__parcellation = multilevel_human.get_parcellation(parcellation)
@@ -234,6 +263,35 @@ class Logic:
                 'Image type must be "template", "aligned" or "unaligned"')
         else:
             self.__img_type = type
+
+    def get_img_type(self):
+        """Return the image type."""
+        return self.__img_type
+    
+    def save_point(self, point):
+        """Save a selected point.
+        
+        :param tuple point: point to save
+        """
+        self.__saved_points.append(point)
+
+    def delete_point(self, point):
+        """Delete a saved point.
+        
+        :param tuple point: point to delete
+        :return int: index of the point in the list of saved points
+        """
+        idx = self.__saved_points.index(point)
+        self.__saved_points.pop(idx)
+        return idx
+    
+    def get_num_points(self):
+        """Get number of saved points"""
+        return len(self.__saved_points)
+    
+    def delete_points(self):
+        """Delete all saved points."""
+        self.__saved_points = []
 
     def save_paths(self):
         """Save the current input and output path for calculation as the user may inspect a different volume during calculation."""
@@ -326,9 +384,9 @@ class Logic:
             self.__transform_path = transform+'InverseComposite.h5'
 
     def __phys2mni(self, source_coords_ras):
-        """Warp coordinates from patient's physical to MNI152 space using the transform matrix.
+        """Warp coordinates from subject's physical to MNI152 space using the transform matrix.
 
-        :param list source_coords_ras: coordinates in patient's physical space (RAS)
+        :param list source_coords_ras: coordinates in subject's physical space (RAS)
         :return list: warped coordinates in MNI152 space (RAS)
         :raise mriwarp.SubprocessFailedError: if execution of antsApplyTransformsToPoints failed
         """
@@ -367,18 +425,28 @@ class Logic:
         return (target_coords_lbs * (-1, -1, 1)).tolist()
 
     def vox2phys(self, coords):
-        """Warp coordinates from patient's voxel to physical space.
+        """Warp coordinates from subject's voxel to physical space.
 
-        :param list source_coords_ras: coordinates in RAS space
-        :return list: warped coordinates in RAS space
+        :param list source_coords_ras: coordinates in voxel space
+        :return list: warped coordinates in physical space
         """
         vox2phys = self.__nifti_source.affine
         return [nib.affines.apply_affine(vox2phys, coords)]
+    
+    def phys2vox(self, coords):
+        """Warp coordinates from subject's physical to voxel space.
+
+        :param list source_coords_ras: coordinates in physical space
+        :return list: warped coordinates in voxel space
+        """
+        vox2phys = self.__nifti_source.affine
+        phys2vox = np.linalg.inv(vox2phys)
+        return [nib.affines.apply_affine(phys2vox, coords)]
 
     def get_regions(self, coords):
-        """Assign patient voxel coordinates to regions in the Julich Brain Atlas.
+        """Assign subject voxel coordinates to regions in the Julich Brain Atlas.
 
-        :param list coords: coordinates in patient's voxel space
+        :param list coords: coordinates in subject's voxel space
         :return list, list, list: source coordinates in RAS, target coordinates in RAS and the assigned regions
         with their probabilities and url to siibra-explorer
         :raise PointNotFoundError: if the given point is outside the brain
@@ -390,7 +458,7 @@ class Logic:
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
 
-        # Transform from patient's voxel to patient's physical space.
+        # Transform from subject's voxel to subject's physical space.
         source_coords_ras = self.vox2phys(coords)
 
         if self.__img_type == 'unaligned':
