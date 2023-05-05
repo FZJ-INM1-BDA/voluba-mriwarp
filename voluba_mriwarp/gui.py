@@ -841,6 +841,7 @@ class App(tk.Tk):
                      pady=5, text=f'No region found', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
             frame.pack(anchor='n', fill='x', side='top', pady=(0, 5))
 
+    # TODO remove points if parcellation changes?
     def __change_parcellation(self, parcellation):
         """Change the current parcellation that is used for region assignment.
 
