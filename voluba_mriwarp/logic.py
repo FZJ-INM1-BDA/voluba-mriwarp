@@ -280,9 +280,10 @@ class Logic:
         :param tuple point: point to delete
         :return int: index of the point in the list of saved points
         """
-        idx = self.__saved_points.index(point)
-        self.__saved_points.pop(idx)
-        return idx
+        for i, p in enumerate(self.__saved_points):
+            if p is point:
+                self.__saved_points.pop(i)
+                return i
     
     def get_num_points(self):
         """Get number of saved points"""
