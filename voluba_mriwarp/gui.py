@@ -112,8 +112,8 @@ class App(tk.Tk):
             'save', fill=siibra_bg, scale_to_width=15)
         self.__trash_icon = icon_to_image(
             'trash', fill='darkred', scale_to_width=12)
-        self.__brain_icon = icon_to_image(
-            'brain', fill=siibra_bg, scale_to_width=15)
+        self.__eye_icon = icon_to_image(
+            'eye', fill=siibra_bg, scale_to_width=15)
 
     def __create_viewpanel(self):
         """Create the frame for the NIfTI viewer."""
@@ -319,6 +319,19 @@ class App(tk.Tk):
         for i, column_text in enumerate(columns):
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=column_text), state='readonly', width=13).grid(row=1, column=i)
         self.__point_widgets = []
+        # add point (manually or by clicking)
+        label = tk.StringVar()
+        self.__R, self.__A, self.__S = tk.DoubleVar(), tk.DoubleVar(), tk.DoubleVar()
+        widgets = [
+            tk.Entry(self.__point_frame, width=10, textvariable=label),
+            tk.Entry(self.__point_frame, textvariable=self.__R, width=10),
+            tk.Entry(self.__point_frame, textvariable=self.__A, width=10),
+            tk.Entry(self.__point_frame, textvariable=self.__S, width=10),
+            tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove', command=lambda: self.__reload_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
+            tk.Button(self.__point_frame, image=self.__save_icon, command=lambda: self.__save_point((self.__R.get(), self.__A.get(), self.__S.get()), label=label.get()))
+        ]
+        for i, widget in enumerate(widgets):
+            widget.grid(row=2, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
 
         # separator
         tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x')
@@ -399,6 +412,9 @@ class App(tk.Tk):
         label.pack(fill='x')
 
         # Remove previously saved points.
+        self.__R.set(0)
+        self.__A.set(0)
+        self.__S.set(0)
         self.logic.delete_points()
         for row in self.__point_widgets:
             for widget in row:
@@ -442,12 +458,6 @@ class App(tk.Tk):
             # Retry the region assignment for the currently selected point if the output folder changes.
             if self.__annotation != [-1, -1, -1]:
                 self.set_annotation()
-                # Remove previously saved points.
-                self.logic.delete_points()
-                for row in self.__point_widgets:
-                    for widget in row:
-                        widget.destroy()
-                self.__point_widgets = []
 
     def __track_transform(self, variable):
         """Observe the Entry widget for the path to the transformation file.
@@ -630,6 +640,12 @@ class App(tk.Tk):
         # The origin in the viewer is upper left but the image origin is lower left.
         self.__annotation = [self.__annotation[0], self.__annotation[1],
                              self.logic.get_numpy_source().shape[0] - self.__annotation[2]]
+        
+        # set manual points to coords
+        source_coords_ras = self.logic.vox2phys(self.__annotation)[0]
+        self.__R.set(source_coords_ras[0])
+        self.__A.set(source_coords_ras[1])
+        self.__S.set(source_coords_ras[2])
 
         # Remove previous region assignments.
         for widget in self.__region_frame.winfo_children():
@@ -639,9 +655,7 @@ class App(tk.Tk):
             threading.Thread(target=self.__create_assignment,
                              daemon=True).start()
         else:  # No transformation matrix can be found.
-            source_coords_ras = self.logic.vox2phys(self.__annotation)
-
-            self.__create_annotation(source_coords_ras[0])
+            self.__create_annotation(source_coords_ras)
 
             # widget for info on missing transformation matrix
             tk.Label(self.__region_frame, anchor='w', bg=siibra_bg, compound='left', fg=siibra_fg, image=self.__info_icon, justify='left', padx=5,
@@ -660,11 +674,8 @@ class App(tk.Tk):
             coords[i] = round(coords[i], 2)
 
         # widget for the annotated point in physical space
-        frame = tk.Frame(self.__region_frame, bg='gold')
-        frame.pack(anchor='n', fill='x')
-        tk.Label(frame, anchor='w', bg='gold', fg=siibra_bg, font=font_12_b, padx=10, pady=10,
-                 justify='left', text=f'Point {tuple(coords)} [mm]', wraplength=sidepanel_width - 20).pack(anchor='n', side='left', fill='x')
-        tk.Button(frame, anchor='e', bg='gold', image=self.__save_icon, relief='flat', command=lambda: self.__save_point(tuple(coords))).pack(anchor='center', side='right', padx=10)
+        tk.Label(self.__region_frame, anchor='w', bg='gold', fg=siibra_bg, font=font_12_b, padx=10, pady=10,
+                 justify='left', text=f'Point {tuple(coords)} [mm]', wraplength=sidepanel_width - 20).pack(anchor='n', fill='x')
 
         # widget for the current filename
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5, pady=5,
@@ -680,7 +691,7 @@ class App(tk.Tk):
         for widget in widgets:
             widget.destroy()
         
-    def __save_point(self, point):
+    def __save_point(self, point, label=""):
         """Save a point and add its corresponding widgets.
         
         :param tuple point: point to save
@@ -688,22 +699,17 @@ class App(tk.Tk):
         self.logic.save_point(point)
         idx = self.logic.get_num_points()
 
-        # TODO implement manual adding of points
-        # first row (add point): label | R | A | S | reload | save
-        # ---------------------------------------------
-        # following rows (added points): label | R | A | S | reload | delete
-        # When a point is clicked in the view --> fill the first row of table
-        # When a point is entered in the table --> don't do anything, unless user clicks save or reload
+        # TODO add scrollbars for points and region assignment
         widgets = [
-            tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(value=idx)),
+            tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(value=label if label.rstrip() else idx)),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[0]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[1]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[2]), width=10, state='readonly'),
-            tk.Button(self.__point_frame, image=self.__brain_icon, relief='sunken', command=lambda: self.__reload_assignment(point)),
+            tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove', command=lambda: self.__reload_assignment(point)),
             tk.Button(self.__point_frame, image=self.__trash_icon, command=lambda: self.__remove_point(point))
         ]
         for i, widget in enumerate(widgets):
-            widget.grid(row=idx+2, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
+            widget.grid(row=idx+3, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
         self.__point_widgets.append(widgets)
         
         #############################################
