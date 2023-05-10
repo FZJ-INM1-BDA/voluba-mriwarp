@@ -163,10 +163,11 @@ class App(tk.Tk):
         self.__assignment_frame.grid(row=2, column=0, sticky='nwe')
         self.__create_assignment_widgets()
 
+        # TODO move this
         # help icon
-        side_panel.rowconfigure(1, weight=1)
-        tk.Button(side_panel, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'https://voluba-mriwarp.readthedocs.io'), anchor='se').grid(row=4, column=0, sticky='se', pady=25, padx=(0, 25))
+        # side_panel.rowconfigure(1, weight=1)
+        # tk.Button(side_panel, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
+        #     'https://voluba-mriwarp.readthedocs.io'), anchor='se').grid(row=4, column=0, sticky='se', pady=25, padx=(0, 25))
         
         self.__show_warping_frame()
 
@@ -309,11 +310,21 @@ class App(tk.Tk):
         # separator
         tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x')
 
-        # frame for points
-        self.__point_frame = tk.Frame(
-            self.__assignment_frame, bg=siibra_highlight_bg, pady=20, padx=15)
-        self.__point_frame.pack(fill='x')
-        tk.Label(self.__point_frame, bg=siibra_highlight_bg, fg='white', font=font_10, justify='left', anchor='w', text='Selected points').grid(row=0, column=0, columnspan=5, pady=(0, 10), sticky='w')
+        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, fg='white', font=font_10, justify='left', anchor='w', text='Selected points').pack(pady=(20, 10))
+
+        # scrollable frame for points
+        point_scroll_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
+        point_scroll_frame.pack(fill='x')
+        point_canvas = tk.Canvas(point_scroll_frame, bg=siibra_highlight_bg, highlightbackground=siibra_highlight_bg, selectbackground=siibra_highlight_bg)
+        point_scrollbar = tk.Scrollbar(point_scroll_frame, orient='vertical', command=point_canvas.yview)
+        self.__point_frame = tk.Frame(point_canvas, bg=siibra_highlight_bg, padx=10, pady=10)
+
+        self.__point_frame.bind('<Configure>', lambda e: point_canvas.configure(scrollregion=point_canvas.bbox('all')))
+        point_canvas.create_window((0, 0), window=self.__point_frame, anchor='nw')
+        point_canvas.configure(yscrollcommand=point_scrollbar.set)
+        point_canvas.pack(side='left', fill='both', expand=True)
+        point_scrollbar.pack(side='right', fill='y')
+
         # table header
         columns = ['Label', 'R', 'A', 'S', 'Show regions']
         for i, column_text in enumerate(columns):
@@ -334,12 +345,21 @@ class App(tk.Tk):
             widget.grid(row=2, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
 
         # separator
-        tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x')
+        tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x', pady=(20, 0))
 
-        # frame for results of region assignment
-        self.__region_frame = tk.Frame(
-            self.__assignment_frame, bg=siibra_bg)
-        self.__region_frame.pack(fill='x', pady=20)
+        # scrollable frame for results of region assignment
+        # TODO frame is not big enough in y
+        region_scroll_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg, height=100)
+        region_scroll_frame.pack(fill='x')
+        region_canvas = tk.Canvas(region_scroll_frame, bg=siibra_highlight_bg, highlightbackground=siibra_highlight_bg) 
+        region_scrollbar = tk.Scrollbar(region_scroll_frame, orient='vertical', command=region_canvas.yview)
+        self.__region_frame = tk.Frame(region_canvas, bg=siibra_highlight_bg)
+
+        self.__region_frame.bind('<Configure>', lambda e: region_canvas.configure(scrollregion=region_canvas.bbox('all')))
+        region_canvas.create_window((0, 0), window=self.__region_frame, anchor='nw')
+        region_canvas.configure(yscrollcommand=region_scrollbar.set)
+        region_canvas.pack(side='left', fill='both', expand=True)
+        region_scrollbar.pack(side='right', fill='y')
 
     def __show_warping_frame(self):
         """Bring the warping frame to the foreground."""
@@ -406,7 +426,7 @@ class App(tk.Tk):
             widget.destroy()
 
         # widget for info on how to select regions
-        label = tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, compound='left', fg='white', padx=15,
+        label = tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, compound='left', fg='white', padx=15, pady=20,
                          font=font_10, image=self.__info_icon, text='Double click a location in the viewer to assign a brain region.')
         label.image = self.__info_icon
         label.pack(fill='x')
@@ -699,7 +719,6 @@ class App(tk.Tk):
         self.logic.save_point(point)
         idx = self.logic.get_num_points()
 
-        # TODO add scrollbars for points and region assignment
         widgets = [
             tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(value=label if label.rstrip() else idx)),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[0]), width=10, state='readonly'),
@@ -740,7 +759,7 @@ class App(tk.Tk):
         dots.set('.')
         loading = tk.Label(self.__region_frame, bg=siibra_highlight_bg,
                            fg='white', font=font_18_b, textvariable=dots)
-        loading.pack(fill='x')
+        loading.pack(fill='x', padx=15, pady=20)
 
         while self.__calculating:
             time.sleep(1)
