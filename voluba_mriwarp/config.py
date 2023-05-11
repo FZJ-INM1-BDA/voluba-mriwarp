@@ -22,4 +22,4 @@ font_12 = ('', 12, '')
 font_12_b = ('', 12, 'bold')
 font_18_b = ('', 18, 'bold')
 
-sidepanel_width = 500
+sidepanel_width = 600

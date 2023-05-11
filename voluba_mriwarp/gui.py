@@ -128,46 +128,41 @@ class App(tk.Tk):
         """Create the frame and widgets for data selection, warping and region assignment."""
         # Update the window to get the real size of it.
         self.update()
-        side_panel = tk.Frame(self, bg=siibra_highlight_bg,
+        self.__sidepanel = tk.Frame(self, bg=siibra_highlight_bg,
                               height=self.winfo_height(), width=sidepanel_width)
-        side_panel.pack(side='left', pady=10, fill='y', expand=True)
-        side_panel.pack_propagate(False)
+        self.__sidepanel.pack(side='left', pady=10, fill='both', expand=True)
+        self.__sidepanel.pack_propagate(False)
 
-        # frame for data selection and menu chips
-        operation_frame = tk.Frame(side_panel, bg=warp_bg)
-        operation_frame.grid(row=0, column=0, sticky='nsew')
+        # little hack to make following widgets expand to full width
+        f = tk.Frame(self.__sidepanel, bg=warp_bg, width=sidepanel_width)
+        f.grid(row=0, column=0, sticky='we')
+        f.grid_propagate(False)
 
         # frame for data selection
-        self.__data_frame = tk.Frame(operation_frame, bg=siibra_highlight_bg)
+        self.__data_frame = tk.Frame(self.__sidepanel, bg=siibra_highlight_bg)
         self.__data_frame.grid(row=0, column=0, sticky='we')
         self.__create_data_widgets()
 
         # menu chips for warping and region assignment
         self.__step = tk.IntVar()
-        menu = tk.Frame(operation_frame, bg=warp_bg)
-        tk.Radiobutton(menu, text='Warping', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg,
+        self.__menu = tk.Frame(self.__sidepanel, bg=warp_bg)
+        self.__menu.grid(row=1, column=0, sticky='we')
+        tk.Radiobutton(self.__menu, text='Warping', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg,
                        bd=0, variable=self.__step, command=self.__show_warping_frame, value=0, font=font_10_b).grid(row=0, column=0, pady=(20, 0))
-        tk.Radiobutton(menu, text=' Region assignment', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg,
+        tk.Radiobutton(self.__menu, text=' Region assignment', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg,
                        bd=0, variable=self.__step, command=self.__show_assignment_frame, value=1, font=font_10_b).grid(row=0, column=1, pady=(20, 0))
-        menu.grid(row=1, column=0, sticky='we')
 
         # frame for warping
         self.__warping_frame = tk.Frame(
-            operation_frame, bg=siibra_highlight_bg)
-        self.__warping_frame.grid(row=2, column=0, sticky='nwe')
+            self.__sidepanel, bg=siibra_highlight_bg)
+        self.__warping_frame.grid(row=2, column=0, sticky='we')
         self.__create_warping_widgets()
 
         # frame for region assignment
         self.__assignment_frame = tk.Frame(
-            operation_frame, bg=siibra_highlight_bg)
-        self.__assignment_frame.grid(row=2, column=0, sticky='nwe')
+            self.__sidepanel, bg=siibra_highlight_bg)
+        self.__assignment_frame.grid(row=2, column=0, sticky='nswe')
         self.__create_assignment_widgets()
-
-        # TODO move this
-        # help icon
-        # side_panel.rowconfigure(1, weight=1)
-        # tk.Button(side_panel, bg=siibra_highlight_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-        #     'https://voluba-mriwarp.readthedocs.io'), anchor='se').grid(row=4, column=0, sticky='se', pady=25, padx=(0, 25))
         
         self.__show_warping_frame()
 
@@ -326,6 +321,7 @@ class App(tk.Tk):
         point_scrollbar.pack(side='right', fill='y')
 
         # table header
+        # TODO add colorpicker (https://www.pythontutorial.net/tkinter/tkinter-color-chooser/)
         columns = ['Label', 'R', 'A', 'S', 'Show regions']
         for i, column_text in enumerate(columns):
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=column_text), state='readonly', width=13).grid(row=1, column=i)
@@ -345,18 +341,19 @@ class App(tk.Tk):
             widget.grid(row=2, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
 
         # separator
-        tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x', pady=(20, 0))
+        tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x')
 
         # scrollable frame for results of region assignment
-        # TODO frame is not big enough in y
-        region_scroll_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg, height=100)
+        self.update()
+        current_height = self.__data_frame.winfo_height()+self.__menu.winfo_height()+self.__assignment_frame.winfo_height()+3
+        region_scroll_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
         region_scroll_frame.pack(fill='x')
-        region_canvas = tk.Canvas(region_scroll_frame, bg=siibra_highlight_bg, highlightbackground=siibra_highlight_bg) 
+        region_canvas = tk.Canvas(region_scroll_frame, bg=siibra_highlight_bg, highlightbackground=siibra_highlight_bg, height=self.__sidepanel.winfo_height() - current_height)
         region_scrollbar = tk.Scrollbar(region_scroll_frame, orient='vertical', command=region_canvas.yview)
         self.__region_frame = tk.Frame(region_canvas, bg=siibra_highlight_bg)
 
         self.__region_frame.bind('<Configure>', lambda e: region_canvas.configure(scrollregion=region_canvas.bbox('all')))
-        region_canvas.create_window((0, 0), window=self.__region_frame, anchor='nw')
+        region_canvas.create_window((0, 0), window=self.__region_frame, anchor='nw', width=sidepanel_width-20)
         region_canvas.configure(yscrollcommand=region_scrollbar.set)
         region_canvas.pack(side='left', fill='both', expand=True)
         region_scrollbar.pack(side='right', fill='y')
@@ -414,6 +411,10 @@ class App(tk.Tk):
         # View needs to be initialized before slider as slider.set updates the viewer.
         self.__coronal_view = View(
             self.__view_panel, data=image[:, coronal_slice, :], slice=coronal_slice, side='bottom', padx=10, pady=10)
+        
+        # help icon
+        tk.Button(self.__view_panel, bg=warp_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
+            'https://voluba-mriwarp.readthedocs.io')).pack(anchor='e', side='right', padx=20, pady=(20,0))
 
         # widget for changing the displayed slice
         self.__coronal_slider = tk.Scale(self.__view_panel, bg=warp_bg, fg='white', command=lambda value: self.__update_coronal(
@@ -459,9 +460,8 @@ class App(tk.Tk):
                 self.__check_mark.grid_remove()
                 self.__check_mark = None
 
-            self.__coronal_view.canvas.destroy()
-            self.__coronal_view.destroy()
-            self.__coronal_slider.destroy()
+            for widget in self.__view_panel.winfo_children():
+                widget.destroy()
 
             self.__create_viewer()
             self.__mni.set(0)
@@ -677,12 +677,16 @@ class App(tk.Tk):
         else:  # No transformation matrix can be found.
             self.__create_annotation(source_coords_ras)
 
+            path = self.__open_transform_path.get().rstrip()
+            if path == '':
+                path = self.logic.get_out_path()
             # widget for info on missing transformation matrix
             tk.Label(self.__region_frame, anchor='w', bg=siibra_bg, compound='left', fg=siibra_fg, image=self.__info_icon, justify='left', padx=5,
-                     text=f'Could not find {self.logic.get_transform_path()}.\n'        # TODO get_transform_path() is '' here!
+                     text=f'Could not find a transformation in {path}.\n'
                      f'To assign regions to a selected point, please warp the input NIfTI to MNI152 space or '
-                     f'provide the location of the transformation matrix in Advanced settings.', 
-                     wraplength=sidepanel_width - 20).pack(anchor='n', fill='x', padx=5, pady=10)
+                     f'provide the location of the transformation matrix in Advanced settings.\n'
+                     f'If you need help, visit voluba-mriwarp.readthedocs.io.', 
+                     wraplength=sidepanel_width - 80).pack(anchor='n', fill='x', padx=5, pady=10)
 
     def __create_annotation(self, coords):
         """Create widgets to display the selected annotation.
@@ -695,7 +699,7 @@ class App(tk.Tk):
 
         # widget for the annotated point in physical space
         tk.Label(self.__region_frame, anchor='w', bg='gold', fg=siibra_bg, font=font_12_b, padx=10, pady=10,
-                 justify='left', text=f'Point {tuple(coords)} [mm]', wraplength=sidepanel_width - 20).pack(anchor='n', fill='x')
+                 justify='left', text=f'Point {tuple(coords)} [mm]').pack(anchor='n', fill='x', expand=True)
 
         # widget for the current filename
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5, pady=5,
