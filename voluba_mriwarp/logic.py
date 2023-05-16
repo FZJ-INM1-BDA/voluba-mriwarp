@@ -444,12 +444,12 @@ class Logic:
         phys2vox = np.linalg.inv(vox2phys)
         return [nib.affines.apply_affine(phys2vox, coords)]
 
-    def get_regions(self, coords):
+    def get_regions(self, coords, uncertainty_mm):
         """Assign subject voxel coordinates to regions in the Julich Brain Atlas.
 
         :param list coords: coordinates in subject's voxel space
-        :return list, list, list: source coordinates in RAS, target coordinates in RAS and the assigned regions
-        with their probabilities and url to siibra-explorer
+        :param float uncertainty_mm: uncertainty of a point in input's physical space
+        :return list, list, list, dict: source coordinates in RAS, target coordinates in RAS, assignments and urls to siibra-explorer
         :raise PointNotFoundError: if the given point is outside the brain
         """
         # Import siibra related modules here to make use of preloading/caching.
@@ -458,6 +458,8 @@ class Logic:
 
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
+
+        sort_value = 'input containedness' if uncertainty_mm else 'map value'
 
         # Transform from subject's voxel to subject's physical space.
         source_coords_ras = self.vox2phys(coords)
@@ -473,21 +475,18 @@ class Logic:
             target_coords_ras = source_coords_ras
 
         map = siibra.get_map(self.__parcellation, mni152, maptype=maptype)
-        target = siibra.Point(target_coords_ras[0], space=mni152)
+        target = siibra.Point(target_coords_ras[0], space=mni152, sigma_mm=uncertainty_mm)
+
         try:
             assignments = map.assign(target)
         except IndexError:
             raise PointNotFoundError('Point doesn\'t match MNI152 space.')
-        results = assignments.sort_values(by='map value', ascending=False)
-        if results.empty:
-            probabilities = None
-        else:
-            probabilities = []
-            for i in range(len(results)):
-                region = results.iloc[i]['region']
-                probability = results.iloc[i]['map value']
-                url = siibra_explorer_toolsuite.run(
-                    multilevel_human, mni152, self.__parcellation, region)
-                probabilities.append([region, probability, url])
+        results = assignments.sort_values(by=sort_value, ascending=False)
+        # Remove all columns that are irrelevant or None.
+        results = results.drop(['input structure', 'centroid', 'volume', 'fragment'], axis=1)
+        results = results.dropna(axis=1)
+        urls = {}
+        for region in results['region']:
+            urls[region.name] = 'atlases.ebrains.eu/viewer' # siibra_explorer_toolsuite.run(multilevel_human, mni152, self.__parcellation, region)
 
-        return source_coords_ras[0], target_coords_ras[0], probabilities
+        return source_coords_ras[0], target_coords_ras[0], results, urls

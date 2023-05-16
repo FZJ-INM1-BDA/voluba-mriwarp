@@ -15,6 +15,7 @@ from voluba_mriwarp.canvas import View
 from voluba_mriwarp.config import *
 from voluba_mriwarp.exceptions import *
 from voluba_mriwarp.logic import Logic
+from voluba_mriwarp.widgets import *
 
 
 class App(tk.Tk):
@@ -129,7 +130,7 @@ class App(tk.Tk):
         # Update the window to get the real size of it.
         self.update()
         self.__sidepanel = tk.Frame(self, bg=siibra_highlight_bg,
-                              height=self.winfo_height(), width=sidepanel_width)
+                                    height=self.winfo_height(), width=sidepanel_width)
         self.__sidepanel.pack(side='left', pady=10, fill='both', expand=True)
         self.__sidepanel.pack_propagate(False)
 
@@ -163,7 +164,7 @@ class App(tk.Tk):
             self.__sidepanel, bg=siibra_highlight_bg)
         self.__assignment_frame.grid(row=2, column=0, sticky='nswe')
         self.__create_assignment_widgets()
-        
+
         self.__show_warping_frame()
 
     def __create_data_widgets(self):
@@ -172,7 +173,7 @@ class App(tk.Tk):
         input_file = tk.StringVar()
         input_file.trace('w', lambda name, index, mode,
                          sv=input_file: self.__track_input(sv))
-        tk.Label(self.__data_frame, bg=siibra_highlight_bg, width=11, anchor='w', fg='white',
+        tk.Label(self.__data_frame, bg=siibra_highlight_bg, width=15, anchor='w', fg='white',
                  text='Input NIfTI: ').grid(column=0, row=0, sticky='w', padx=(15, 10), pady=(20, 15))
         if platform.system() == 'Linux':
             self.__open_file_path = tk.Entry(
@@ -188,7 +189,7 @@ class App(tk.Tk):
         output_folder = tk.StringVar()
         output_folder.trace('w', lambda name, index, mode,
                             sv=output_folder: self.__track_output(sv))
-        tk.Label(self.__data_frame, bg=siibra_highlight_bg, width=11, anchor='w', fg='white',
+        tk.Label(self.__data_frame, bg=siibra_highlight_bg, width=15, anchor='w', fg='white',
                  text='Output folder: ').grid(column=0, row=1, sticky='w', padx=(15, 10), pady=(0, 20))
         if platform.system() == 'Linux':
             self.__open_folder_path = tk.Entry(
@@ -216,7 +217,7 @@ class App(tk.Tk):
         self.__param_frame.grid(column=0, row=1, padx=10, pady=5)
         json_file = tk.StringVar()
         tk.Label(self.__param_frame, bg=siibra_highlight_bg, justify='left', anchor='w', fg='white',
-                 text='Parameters: ', width=11).grid(column=0, row=1, sticky='w')
+                 text='Parameters: ', width=15).grid(column=0, row=1, sticky='w')
         if platform.system() == 'Linux':
             self.__open_json_path = tk.Entry(
                 self.__param_frame, bd=0, textvariable=json_file, width=35)
@@ -251,7 +252,7 @@ class App(tk.Tk):
         mni_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
         mni_frame.pack(fill='x', padx=15, pady=(20, 0))
         tk.Label(mni_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
-                 text='Input already\nin MNI152:', width=11).grid(column=0, row=0, sticky='w')
+                 text='Input already in\nMNI152 space:', width=15).grid(column=0, row=0, sticky='w')
         style = ttk.Style(self)
         style.configure('TRadiobutton', background=siibra_highlight_bg,
                         foreground='white')
@@ -266,17 +267,30 @@ class App(tk.Tk):
             self.__assignment_frame, bg=siibra_highlight_bg)
         parcellation_frame.pack(fill='x', padx=15, pady=15)
         tk.Label(parcellation_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
-                 text='Parcellation:', width=11).grid(row=0, column=0, sticky='w')
+                 text='Parcellation:', width=15).grid(row=0, column=0, sticky='w')
         parcellation = tk.StringVar()
         p_options = ttk.OptionMenu(parcellation_frame, parcellation, self.logic.get_parcellation(), *self.logic.get_parcellations(),
                                    command=self.__change_parcellation)
         p_options.configure(width=40)
         p_options.grid(row=0, column=1, sticky='we', padx=10)
 
+        # widgets for point uncertainty
+        uncertainty_frame = tk.Frame(
+            self.__assignment_frame, bg=siibra_highlight_bg)
+        uncertainty_frame.pack(fill='x', padx=15)
+        tk.Label(uncertainty_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
+                 text='Point uncertainty:', width=15).grid(row=0, column=0, sticky='w')
+        vcmd = (self.register(self.__validate_uncertainty), '%P')
+        self.__uncertainty = tk.Spinbox(uncertainty_frame, from_=0, to=100, validate='key', validatecommand=vcmd,
+                                        increment=0.1, format='%.2f', width=5)
+        self.__uncertainty.grid(row=0, column=1, sticky='w', padx=10)
+        tk.Label(uncertainty_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
+                 text='mm').grid(row=0, column=2, sticky='w')
+
         # widgets for advanced registration
         advanced_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg,
                                   highlightbackground=siibra_bg, highlightthickness=2)
-        advanced_frame.pack(fill='x', padx=15, pady=(0, 20))
+        advanced_frame.pack(fill='x', padx=15, pady=(15, 20))
         # button to expand parameter file selection
         self.__transform_btn = tk.Button(advanced_frame, bd=0, command=self.__change_advanced_transform, text=' Advanced settings ',
                                          padx=2.5, bg=siibra_highlight_bg, fg='white', image=self.__caret_right, compound='left', anchor='w')
@@ -287,9 +301,9 @@ class App(tk.Tk):
         self.__transform_frame.grid(column=0, row=1, padx=10, pady=5)
         transform_file = tk.StringVar()
         transform_file.trace('w', lambda name, index, mode,
-                            sv=transform_file: self.__track_transform(sv))
+                             sv=transform_file: self.__track_transform(sv))
         tk.Label(self.__transform_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
-                 text='Transformation\nfile: ', width=11).grid(column=0, row=1, sticky='w')
+                 text='Transformation file: ', width=15).grid(column=0, row=1, sticky='w')
         if platform.system() == 'Linux':
             self.__open_transform_path = tk.Entry(
                 self.__transform_frame, bd=0, textvariable=transform_file, width=35)
@@ -303,19 +317,31 @@ class App(tk.Tk):
         self.__transform_showing = False
 
         # separator
-        tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x')
+        tk.Frame(self.__assignment_frame, bg=siibra_bg,
+                 height=10).pack(fill='x')
 
-        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, fg='white', font=font_10, justify='left', anchor='w', text='Selected points').pack(pady=(20, 10))
+        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, fg='white', font=font_10,
+                 justify='left', anchor='w', text='Selected points').pack(pady=(20, 10))
+
+        self.update()
+        remaining_height = (self.winfo_height()-self.__data_frame.winfo_height() -
+                            self.__assignment_frame.winfo_height())//4
 
         # scrollable frame for points
-        point_scroll_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
+        point_scroll_frame = tk.Frame(
+            self.__assignment_frame, bg=siibra_highlight_bg)
         point_scroll_frame.pack(fill='x')
-        point_canvas = tk.Canvas(point_scroll_frame, bg=siibra_highlight_bg, highlightbackground=siibra_highlight_bg, selectbackground=siibra_highlight_bg)
-        point_scrollbar = tk.Scrollbar(point_scroll_frame, orient='vertical', command=point_canvas.yview)
-        self.__point_frame = tk.Frame(point_canvas, bg=siibra_highlight_bg, padx=10, pady=10)
+        point_canvas = tk.Canvas(point_scroll_frame, bg=siibra_highlight_bg, height=remaining_height,
+                                 highlightbackground=siibra_highlight_bg, selectbackground=siibra_highlight_bg)
+        point_scrollbar = tk.Scrollbar(
+            point_scroll_frame, orient='vertical', command=point_canvas.yview)
+        self.__point_frame = tk.Frame(
+            point_canvas, bg=siibra_highlight_bg, padx=10, pady=10)
 
-        self.__point_frame.bind('<Configure>', lambda e: point_canvas.configure(scrollregion=point_canvas.bbox('all')))
-        point_canvas.create_window((0, 0), window=self.__point_frame, anchor='nw')
+        self.__point_frame.bind('<Configure>', lambda e: point_canvas.configure(
+            scrollregion=point_canvas.bbox('all')))
+        point_canvas.create_window(
+            (0, 0), window=self.__point_frame, anchor='nw')
         point_canvas.configure(yscrollcommand=point_scrollbar.set)
         point_canvas.pack(side='left', fill='both', expand=True)
         point_scrollbar.pack(side='right', fill='y')
@@ -324,7 +350,8 @@ class App(tk.Tk):
         # TODO add colorpicker (https://www.pythontutorial.net/tkinter/tkinter-color-chooser/)
         columns = ['Label', 'R', 'A', 'S', 'Show regions']
         for i, column_text in enumerate(columns):
-            tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=column_text), state='readonly', width=13).grid(row=1, column=i)
+            tk.Entry(self.__point_frame, textvariable=tk.StringVar(
+                value=column_text), state='readonly', width=13).grid(row=1, column=i)
         self.__point_widgets = []
         # add point (manually or by clicking)
         label = tk.StringVar()
@@ -334,29 +361,32 @@ class App(tk.Tk):
             tk.Entry(self.__point_frame, textvariable=self.__R, width=10),
             tk.Entry(self.__point_frame, textvariable=self.__A, width=10),
             tk.Entry(self.__point_frame, textvariable=self.__S, width=10),
-            tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove', command=lambda: self.__reload_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
-            tk.Button(self.__point_frame, image=self.__save_icon, command=lambda: self.__save_point((self.__R.get(), self.__A.get(), self.__S.get()), label=label.get()))
+            tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove',
+                      command=lambda: self.__reload_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
+            tk.Button(self.__point_frame, image=self.__save_icon, command=lambda: self.__save_point(
+                (self.__R.get(), self.__A.get(), self.__S.get()), label=label.get()))
         ]
         for i, widget in enumerate(widgets):
-            widget.grid(row=2, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
+            widget.grid(row=2, column=i, sticky='nswe',
+                        padx=5*(i == len(widgets)-1))
 
         # separator
-        tk.Frame(self.__assignment_frame, bg=siibra_bg, height=10).pack(fill='x')
+        tk.Frame(self.__assignment_frame, bg=siibra_bg,
+                 height=10).pack(fill='x')
 
-        # scrollable frame for results of region assignment
-        self.update()
-        current_height = self.__data_frame.winfo_height()+self.__menu.winfo_height()+self.__assignment_frame.winfo_height()+3
-        region_scroll_frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
-        region_scroll_frame.pack(fill='x')
-        region_canvas = tk.Canvas(region_scroll_frame, bg=siibra_highlight_bg, highlightbackground=siibra_highlight_bg, height=self.__sidepanel.winfo_height() - current_height)
-        region_scrollbar = tk.Scrollbar(region_scroll_frame, orient='vertical', command=region_canvas.yview)
-        self.__region_frame = tk.Frame(region_canvas, bg=siibra_highlight_bg)
+        # frame for results of region assignment
+        self.__region_frame = tk.Frame(
+            self.__assignment_frame, bg=siibra_highlight_bg)
+        self.__region_frame.pack(fill='both', expand=True)
 
-        self.__region_frame.bind('<Configure>', lambda e: region_canvas.configure(scrollregion=region_canvas.bbox('all')))
-        region_canvas.create_window((0, 0), window=self.__region_frame, anchor='nw', width=sidepanel_width-20)
-        region_canvas.configure(yscrollcommand=region_scrollbar.set)
-        region_canvas.pack(side='left', fill='both', expand=True)
-        region_scrollbar.pack(side='right', fill='y')
+    def __validate_uncertainty(self, value):
+        """Validate if the entered uncertainty is a numerical value."""
+        try:
+            float(value)
+            return True
+        except:
+            self.bell()
+            return False
 
     def __show_warping_frame(self):
         """Bring the warping frame to the foreground."""
@@ -411,10 +441,10 @@ class App(tk.Tk):
         # View needs to be initialized before slider as slider.set updates the viewer.
         self.__coronal_view = View(
             self.__view_panel, data=image[:, coronal_slice, :], slice=coronal_slice, side='bottom', padx=10, pady=10)
-        
+
         # help icon
         tk.Button(self.__view_panel, bg=warp_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
-            'https://voluba-mriwarp.readthedocs.io')).pack(anchor='e', side='right', padx=20, pady=(20,0))
+            'https://voluba-mriwarp.readthedocs.io')).pack(anchor='e', side='right', padx=20, pady=(20, 0))
 
         # widget for changing the displayed slice
         self.__coronal_slider = tk.Scale(self.__view_panel, bg=warp_bg, fg='white', command=lambda value: self.__update_coronal(
@@ -660,7 +690,7 @@ class App(tk.Tk):
         # The origin in the viewer is upper left but the image origin is lower left.
         self.__annotation = [self.__annotation[0], self.__annotation[1],
                              self.logic.get_numpy_source().shape[0] - self.__annotation[2]]
-        
+
         # set manual points to coords
         source_coords_ras = self.logic.vox2phys(self.__annotation)[0]
         self.__R.set(source_coords_ras[0])
@@ -685,8 +715,8 @@ class App(tk.Tk):
                      text=f'Could not find a transformation in {path}.\n'
                      f'To assign regions to a selected point, please warp the input NIfTI to MNI152 space or '
                      f'provide the location of the transformation matrix in Advanced settings.\n'
-                     f'If you need help, visit voluba-mriwarp.readthedocs.io.', 
-                     wraplength=sidepanel_width - 80).pack(anchor='n', fill='x', padx=5, pady=10)
+                     f'If you need help, visit voluba-mriwarp.readthedocs.io.',
+                     wraplength=sidepanel_width - 80).pack(fill='x', padx=5, pady=10)
 
     def __create_annotation(self, coords):
         """Create widgets to display the selected annotation.
@@ -699,42 +729,49 @@ class App(tk.Tk):
 
         # widget for the annotated point in physical space
         tk.Label(self.__region_frame, anchor='w', bg='gold', fg=siibra_bg, font=font_12_b, padx=10, pady=10,
-                 justify='left', text=f'Point {tuple(coords)} [mm]').pack(anchor='n', fill='x', expand=True)
+                 justify='left', text=f'Point {tuple(coords)} [mm]').pack(fill='x', expand=True)
 
         # widget for the current filename
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5, pady=5,
-                 text=f'in: {os.path.basename(self.logic.get_in_path())}').pack(anchor='n', fill='x', padx=5, pady=(5, 0))
-        
+                 text=f'in: {os.path.basename(self.logic.get_in_path())}').pack(fill='x', padx=5, pady=(5, 0))
+
     def __remove_point(self, point):
         """Remove a saved point and its corresponding widgets.
-        
+
         :param tuple point: point to delete
         """
         idx = self.logic.delete_point(point)
         widgets = self.__point_widgets.pop(idx)
         for widget in widgets:
             widget.destroy()
-        
-    def __save_point(self, point, label=""):
+
+    def __save_point(self, point, label=''):
         """Save a point and add its corresponding widgets.
-        
+
         :param tuple point: point to save
         """
         self.logic.save_point(point)
         idx = self.logic.get_num_points()
 
         widgets = [
-            tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(value=label if label.rstrip() else idx)),
-            tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[0]), width=10, state='readonly'),
-            tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[1]), width=10, state='readonly'),
-            tk.Entry(self.__point_frame, textvariable=tk.StringVar(value=point[2]), width=10, state='readonly'),
-            tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove', command=lambda: self.__reload_assignment(point)),
-            tk.Button(self.__point_frame, image=self.__trash_icon, command=lambda: self.__remove_point(point))
+            tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(
+                value=label if label.rstrip() else idx)),
+            tk.Entry(self.__point_frame, textvariable=tk.StringVar(
+                value=point[0]), width=10, state='readonly'),
+            tk.Entry(self.__point_frame, textvariable=tk.StringVar(
+                value=point[1]), width=10, state='readonly'),
+            tk.Entry(self.__point_frame, textvariable=tk.StringVar(
+                value=point[2]), width=10, state='readonly'),
+            tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove',
+                      command=lambda: self.__reload_assignment(point)),
+            tk.Button(self.__point_frame, image=self.__trash_icon,
+                      command=lambda: self.__remove_point(point))
         ]
         for i, widget in enumerate(widgets):
-            widget.grid(row=idx+3, column=i, sticky='nswe', padx=5*(i==len(widgets)-1))
+            widget.grid(row=idx+3, column=i, sticky='nswe',
+                        padx=5*(i == len(widgets)-1))
         self.__point_widgets.append(widgets)
-        
+
         #############################################
         # TODO: everything below depends on what is needed for PDF report creation --> discuss with Louisa
         # Do we want to show the subject's brain with points? -> Point in subject + filename
@@ -744,15 +781,16 @@ class App(tk.Tk):
         # --> save filename, point in subject, point in mni, parcellation and assigned regions --> less computation time, but more memory
         # --> only save filename, point, parcellation --> less memory, more computation time
 
-        # TODO Before export: 
-        # 1. Let user choose which regions to export for selected points --> Idea: display assignment in table with checkmarks for export --> make sorting possible (easier with Qt ...)
+        # TODO Before export:
+        # 1. Let user choose which regions to export for selected points --> Idea: display assignment in table with checkmarks for export
         # 2. Let user choose which features to show for selected regions
         # [x] connectivity (StreamlineCounts/StreamlineLengths/FunctionalConnectivity?) [x] cell densities (Profile?) [x] receptor densities (Profile/Fingerprint?)
 
     def __reload_assignment(self, point):
         x, slice, y = self.logic.phys2vox(point)[0]
-        y = self.logic.get_numpy_source().shape[0] - y # The origin in the viewer is upper left but the image origin is lower left.
-        self.__coronal_slider.set(slice+1) # The slider starts at 1.
+        # The origin in the viewer is upper left but the image origin is lower left.
+        y = self.logic.get_numpy_source().shape[0] - y
+        self.__coronal_slider.set(slice+1)  # The slider starts at 1.
 
         # redraw annotation on canvas
         self.__coronal_view.draw_annotation(x, slice, y)
@@ -781,8 +819,8 @@ class App(tk.Tk):
 
         # Assign regions.
         try:
-            source, target, probabilities = self.logic.get_regions(
-                self.__annotation)
+            source, target, results, urls = self.logic.get_regions(
+                self.__annotation, float(self.__uncertainty.get()))
         except SubprocessFailedError as e:
             logging.getLogger(mriwarp_name).error(
                 f'Error during region calculation: {str(e)}')
@@ -790,7 +828,7 @@ class App(tk.Tk):
                                           f'If you need help, please contact support@ebrains.eu.')
             # No region can be found when an error occurs.
             tk.Label(self.__region_frame, anchor='w', bg='red', borderwidth=10, fg='black',
-                     font=font_10_b, text='No region found').pack(anchor='n', fill='x')
+                     font=font_10_b, text='No region found').pack(fill='x')
 
             self.__calculating = False
             return
@@ -799,7 +837,7 @@ class App(tk.Tk):
                 f'{self.__annotation} outside MNI152 space.')
             # The point is outside the brain.
             tk.Label(self.__region_frame, anchor='w', bg='red', borderwidth=10, fg='black',
-                     font=font_10_b, text='Point outside MNI152 space').pack(anchor='n', fill='x', side='top')
+                     font=font_10_b, text='Point outside MNI152 space').pack(fill='x')
             self.__calculating = False
             return
 
@@ -809,12 +847,12 @@ class App(tk.Tk):
 
         # widget for the corresponding point in MNI152 space
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5,
-                 text=f'identified with: {tuple(target)} [mm] in MNI152 2009c nonlinear asymmetric').pack(anchor='n', fill='x', side='top', padx=5)
+                 text=f'identified with: {tuple(target)} [mm] in MNI152 2009c nonlinear asymmetric').pack(fill='x', padx=5)
 
         # widget for the parcellation
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5, pady=5,
-                 text=f'assign to: {self.logic.get_parcellation()}').pack(anchor='n', fill='x', padx=5)
-        
+                 text=f'assign to: {self.logic.get_parcellation()}').pack(fill='x', padx=5)
+
         # widget for the transformation file
         if self.logic.get_img_type() != 'unaligned':
             transform = 'NIfTI affine'
@@ -823,52 +861,53 @@ class App(tk.Tk):
         else:
             transform = 'default transformation'
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5,
-                 text=f'using: {transform}').pack(anchor='n', fill='x', padx=5)
+                 text=f'using: {transform}').pack(fill='x', padx=5)
 
         # separator with optional text
-        separator = tk.Label(self.__region_frame, anchor='w', bg=siibra_bg,
-                             fg=siibra_fg, font=('', 8, ''), padx=5, pady=5, text='\n')
-        separator.pack(anchor='n', fill='x', padx=5)
+        tk.Frame(self.__region_frame, bg=siibra_bg, height=10).pack(fill='x')
+
+        self.update()
+        remaining_height = self.winfo_height()-self.__data_frame.winfo_height() - \
+            self.__assignment_frame.winfo_height()
 
         # widgets for assigned regions
-        region_frame = tk.Frame(self.__region_frame, bg=siibra_bg)
-        region_frame.pack(anchor='n', fill='x', padx=5)
-        if probabilities:
-            # in MNI152
-            if len(probabilities) == 1 and probabilities[0][1] == 1:
-                separator.configure(text='\nbrain region')
+        if not results.empty:
+            region_frame = tk.Frame(
+                self.__region_frame, bg=siibra_highlight_bg, height=remaining_height)
+            region_frame.pack(fill='both', expand=True)
+            region_frame.pack_propagate(False)
 
-                (region, probabilitiy, url) = probabilities[0]
-                frame = tk.Frame(region_frame, bg=siibra_highlight_bg)
-                tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5,
-                         pady=5, text=region, wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
-                # link to region in siibra-explorer
-                button = tk.Button(frame, bg=siibra_highlight_bg, bd=0, highlightthickness=0,
-                                   command=lambda: webbrowser.open(url), image=self.__link_icon)
-                button.image = self.__link_icon
-                button.pack(anchor='center', side='right', padx=5)
-                frame.pack(anchor='n', fill='x', pady=(0, 5))
-                return
-            # in input brain scan
-            separator.configure(
-                text='\nvalue of probability map - brain region')
+            # TODO adjust: coloring --> seems to be more complicated than it should be ...
+            style = ttk.Style()
+            style.configure('Treeview.Heading', font=font_10_b)
+            columns = results.columns.values.tolist()
+            tree = customTreeView(
+                region_frame, columns=columns, show='headings')
+            tree.bind('<Double-1>', lambda event,
+                      _urls=urls: tree.onDoubleClick(event, _urls))
 
-            for (region, probabilitiy, url) in probabilities:
-                frame = tk.Frame(region_frame, bg=siibra_highlight_bg)
-                tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5, pady=5,
-                         text=f'{probabilitiy * 100:.2f}% - {region}', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
-                # link to region in siibra-explorer
-                button = tk.Button(frame, bg=siibra_highlight_bg, bd=0, highlightthickness=0,
-                                   command=lambda url=url: webbrowser.open(url), image=self.__link_icon)
-                button.image = self.__link_icon
-                button.pack(anchor='center', side='right', padx=5)
-                frame.pack(anchor='n', fill='x', pady=(0, 5))
+            y_scrollbar = tk.Scrollbar(
+                region_frame, orient='vertical', command=tree.yview)
+            y_scrollbar.pack(side='right', fill='y')
+            x_scrollbar = tk.Scrollbar(
+                region_frame, orient='horizontal', command=tree.xview)
+            x_scrollbar.pack(side='bottom', fill='x')
+            tree.configure(xscrollcommand=x_scrollbar.set,
+                           yscrollcommand=y_scrollbar.set)
+            tree.pack(fill='both')
+
+            for column in columns:
+                tree.heading(column, text=column,
+                             sort_by='str' if column == 'region' else 'float')
+
+            for _, row in results.iterrows():
+                values = [f'{value:.6f}' if isinstance(
+                    value, float) else value for value in row.values]
+                tree.insert('', tk.END, values=values)
         else:
             # no region found
-            frame = tk.Frame(region_frame, bg=siibra_highlight_bg)
-            tk.Label(frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=5,
-                     pady=5, text=f'No region found', wraplength=sidepanel_width - 20).pack(anchor='n', side='left')
-            frame.pack(anchor='n', fill='x', side='top', pady=(0, 5))
+            tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, font=font_10_b, padx=10,
+                     pady=10, text=f'No region found').pack(side='left')
 
     def __change_parcellation(self, parcellation):
         """Change the current parcellation that is used for region assignment.
