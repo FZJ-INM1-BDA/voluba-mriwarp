@@ -348,6 +348,12 @@ class App(tk.Tk):
 
         # table header
         # TODO add colorpicker (https://www.pythontutorial.net/tkinter/tkinter-color-chooser/)
+        # colors are set for banner of region assignment and for point in viewer (draw and __annotate)
+        # __annotate is set with double click --> would need to fetch color from color widget of first row in point dialog
+        # draw is called when current 'eye button' is clicked --> would need to fetch color from color widget of corresponding row in point dialog
+        # also call draw when color changes for saved point? --> only if slice and point is showing
+        # need to save color for each saved point
+        # TODO permanently show all points? --> eye button would make sense to hide/show points --> change "show regions" to brain icon or smth
         columns = ['Label', 'R', 'A', 'S', 'Show regions']
         for i, column_text in enumerate(columns):
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
