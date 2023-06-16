@@ -1,0 +1,16 @@
+# General workflow
+
+_voluba-mriwarp_ consists of two panels. The side panel on the left is for [warping](warping.md) the input T1-weighted MRI scan to MNI152 space and displaying the results of the [probabilistic region assignment](assignment.md). The [viewer](viewer.md) on the right side is for displaying and inspecting the input MRI scan.
+
+!!! info
+    When running _voluba-mriwarp_ for the first time, the startup may take a few minutes as siibra components need to be fetched.
+
+The general workflow for _voluba-mriwarp_ can be summarized as follows:
+
+![icon](images/1.png) Choose an **input MRI scan**.  
+![icon](images/2.png) Choose an **output folder** for the warping results.  
+![icon](images/3.png) **Warp** the input MRI to MNI152 space.  
+![icon](images/4.png) **Click or enter a coordinate** to make a probabilistic region assignment.  
+![icon](images/5.png) **View more details** about a specific region in [siibra-explorer](https://atlases.ebrains.eu/viewer/go/human).
+
+![image](images/workflow4.png)

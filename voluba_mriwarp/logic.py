@@ -329,14 +329,6 @@ class Logic:
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
         
-        # TODO idea: To define an own ANTs registration command, the user has the following macros to specify parameters:
-        # OUTPATH; INPATH; NAME; FIXED; MOVING; MASK; TRANSFORM; VOLUME.
-        # The GUI will be altered (on another branch) by separating warping and region assignment.
-        # This way, the user that used an own registration, can specify the transformation file that needs to be used.
-        # If the user selects one of the predefined registrations (default, optimised), voluba-mriwarp will automatically
-        # find the OUTPATH/NAME_transformationInverseComposite.h5 in OUTPATH (clarify if OUTPATH is always ~/voluba-mriwarp for region assignment
-        # or the one that is currently used in the warping tab)
-        
         transform = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_transformation'))
         volume = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
 

@@ -25,8 +25,12 @@ markdown_extensions:
 nav:
   - About voluba-mriwarp: 'index.md'
   - 'installation.md'
-  - 'usage.md'
   - 'acknowledgement.md'
+  - Usage:
+    - 'workflow.md'
+    - 'viewer.md'
+    - 'warping.md'
+    - 'assignment.md'
   - Tutorials:
       - 'tutorial.md'
       - 'video_tutorial.md'

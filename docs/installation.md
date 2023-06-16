@@ -22,7 +22,7 @@ Run `Uninstall` from the installation directory or the `voluba-mriwarp` folder i
 ### Requirements
 
 * Python 3.8 or higher
-* [ANTs](https://github.com/ANTsX/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS)
+* [ANTs](https://github.com/ANTsX/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS) <span style="color:red">**TODO** Specify exact ANTs version, if Linux EXE won't work</span>  
 
 ### Install voluba-mriwarp
 
