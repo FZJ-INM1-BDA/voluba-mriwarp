@@ -101,8 +101,8 @@ class App(tk.Tk):
             'times', fill='red', scale_to_width=15)
         self.__info_icon = icon_to_image(
             'info-circle', fill='white', scale_to_width=15)
-        self.__link_icon = icon_to_image(
-            'external-link-alt', fill=siibra_fg, scale_to_width=15)
+        self.__export_icon = icon_to_image(
+            'file-export', fill=siibra_fg, scale_to_width=18)
         self.__help_icon = icon_to_image(
             'question-circle', fill=siibra_fg, scale_to_width=20)
         self.__caret_right = icon_to_image(
@@ -320,8 +320,12 @@ class App(tk.Tk):
         tk.Frame(self.__assignment_frame, bg=siibra_bg,
                  height=10).pack(fill='x')
 
-        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, fg='white', font=font_10,
-                 justify='left', anchor='w', text='Selected points').pack(pady=(20, 10))
+        frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
+        frame.pack(pady=(20, 10), padx=10, fill='x')
+        tk.Label(frame, bg=siibra_highlight_bg, fg='white', font=font_10,
+                 justify='left', anchor='w', text='Coordinates').pack(side='left')
+        
+        tk.Button(frame, bg = siibra_highlight_bg, fg='white', image=self.__export_icon, relief='flat', justify='right', anchor='e', command=self.__export_assignments).pack(padx=10, side='left')
 
         self.update()
         remaining_height = (self.winfo_height()-self.__data_frame.winfo_height() -
@@ -454,12 +458,6 @@ class App(tk.Tk):
         # Remove previous region assignments.
         for widget in self.__region_frame.winfo_children():
             widget.destroy()
-
-        # widget for info on how to select regions
-        label = tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, compound='left', fg='white', padx=15, pady=20,
-                         font=font_10, image=self.__info_icon, text='Double click a location in the viewer to assign a brain region.')
-        label.image = self.__info_icon
-        label.pack(fill='x')
 
         # Remove previously saved points.
         self.__R.set(0)
@@ -771,20 +769,6 @@ class App(tk.Tk):
                         padx=5*(i == len(widgets)-1))
         self.__point_widgets.append(widgets)
 
-        #############################################
-        # TODO: everything below depends on what is needed for PDF report creation --> discuss with Louisa
-        # Do we want to show the subject's brain with points? -> Point in subject + filename
-        # What is definitely needed per point: Point in MNI --> is already part of assigned regions, assignments, parcellation, modality
-
-        # TODO save parcellation, filename, etc.?
-        # --> save filename, point in subject, point in mni, parcellation and assigned regions --> less computation time, but more memory
-        # --> only save filename, point, parcellation --> less memory, more computation time
-
-        # TODO Before export:
-        # 1. Let user choose which regions to export for selected points --> Idea: display assignment in table with checkmarks for export
-        # 2. Let user choose which features to show for selected regions
-        # [x] connectivity (StreamlineCounts/StreamlineLengths/FunctionalConnectivity?) [x] cell densities (Profile?) [x] receptor densities (Profile/Fingerprint?)
-
     def __reload_assignment(self, point):
         x, slice, y = self.logic.phys2vox(point)[0]
         # The origin in the viewer is upper left but the image origin is lower left.
@@ -924,3 +908,86 @@ class App(tk.Tk):
         """Destroy the main window after asking for quit."""
         if messagebox.askokcancel('Quit', 'Do you really want to quit?', parent=self):
             self.destroy()
+
+    def __export_assignments(self):
+        # NOTE the dialog needs the following
+        # - Modalities available for current parcellation --> get from logic
+        # 
+        # Export region assignments for coordinates in {parcellation}.
+        # Location: [~/voluba-mriwarp/report_{filename}.pdf     ] [...] --> wie in data_frame
+        # Export region assignments: [ ]
+        # Export features: [ ] connectivity [ ] receptor densities [ ] ... --> Radiobuttons oder Checkboxen?
+        # [ Export ] [ Cancel ]
+        # 
+        ExportDialog(self, title='Export', logic=self.logic)
+
+class ExportDialog(tk.simpledialog.Dialog):
+    
+    def __init__(self, parent, title, logic):
+        self.__logic = logic
+
+        super().__init__(parent, title=title)
+        
+    def body(self, master):
+        # Explanation
+        frame = tk.Frame(master, bg='white', padx=10, pady=10)
+        frame.pack(fill='x')
+        tk.Label(frame, text=f'Export assignments and features for {self.__logic.get_parcellation()}.', anchor='w', bg='white').pack(anchor='w')
+
+        # Export location
+        frame = tk.Frame(master, padx=10, pady=5)
+        frame.pack()
+        location_frame = tk.Frame(frame)
+        location_frame.pack(anchor='w', pady=5)
+        tk.Label(location_frame, text='Location: ', anchor='w').pack(side='left')
+        path_var = tk.StringVar()
+        path = tk.Entry(location_frame, textvariable=path_var, width=39)
+        path.insert(0, os.path.join(mriwarp_home, self.__logic.get_name()+'.pdf'))
+        path.pack(side='left', padx=10)
+        tk.Button(location_frame, text='...', padx=2.5, command=lambda: self.__select_location(path_var)).pack(side='left')
+
+        # Export features
+        tk.Label(frame, text='Features: ', anchor='w').pack(anchor='w')
+        self.__export_modalities = {}
+        for modality in self.__logic.get_modalities():
+            var = tk.IntVar()
+            self.__export_modalities[modality] = var
+            tk.Checkbutton(frame, text=modality, variable=var).pack(anchor='w')
+
+    def __select_location(self, path_var):
+        """Select an export location."""
+        # Open the latest given valid folder in the filedialog.
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".pdf", filetypes=(("PDF", "*.pdf"),),
+            initialdir=os.path.dirname(path_var.get()), title='Select export location')
+
+        # Canceling the filedialog returns an empty string.
+        if filename:
+            filename = os.path.normpath(filename)
+        path_var.set(filename)
+
+    def buttonbox(self):
+        box = tk.Frame(self)
+
+        w = tk.Button(box, text="Export", width=10, command=self.export, default=tk.ACTIVE)
+        w.pack(side=tk.LEFT, padx=5, pady=5)
+        w = tk.Button(box, text="Cancel", width=10, command=self.cancel)
+        w.pack(side=tk.LEFT, padx=5, pady=5)
+
+        self.bind("<Return>", self.ok)
+        self.bind("<Escape>", self.cancel)
+
+        box.pack()
+
+    def export(self, event=None):
+        self.__logic.export_assignments([modality for modality in self.__export_modalities if self.__export_modalities[modality].get() == 1])
+
+        self.withdraw()
+        self.update_idletasks()
+        self.cancel()
+
+    def cancel(self, event=None):
+        # put focus back to the parent window
+        if self.parent is not None:
+            self.parent.focus_set()
+        self.destroy()
