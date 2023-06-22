@@ -209,9 +209,6 @@ class Logic:
             pmap = siibra.get_map(parcellation, mni152, maptype='statistical')
             if parcellation.supports_space(mni152) and pmap:
                     self.__mni152_parcellations.append(parcellation.shortname)
-                    # TODO Cache the pmaps
-                    # if isinstance(pmap, siibra.volumes.sparsemap.SparseMap):
-                    #     _ = pmap.sparse_index
 
         self.set_parcellation('julich 2.9')
 
@@ -328,14 +325,6 @@ class Logic:
         moving = os.path.normpath(self.__reorient_path_calc)
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
-        
-        # TODO idea: To define an own ANTs registration command, the user has the following macros to specify parameters:
-        # OUTPATH; INPATH; NAME; FIXED; MOVING; MASK; TRANSFORM; VOLUME.
-        # The GUI will be altered (on another branch) by separating warping and region assignment.
-        # This way, the user that used an own registration, can specify the transformation file that needs to be used.
-        # If the user selects one of the predefined registrations (default, optimised), voluba-mriwarp will automatically
-        # find the OUTPATH/NAME_transformationInverseComposite.h5 in OUTPATH (clarify if OUTPATH is always ~/voluba-mriwarp for region assignment
-        # or the one that is currently used in the warping tab)
         
         transform = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_transformation'))
         volume = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
