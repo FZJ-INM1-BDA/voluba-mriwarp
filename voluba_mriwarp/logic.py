@@ -267,12 +267,13 @@ class Logic:
         """Return the image type."""
         return self.__img_type
 
-    def save_point(self, point):
+    def save_point(self, point, label):
         """Save a selected point.
 
         :param tuple point: point to save
         """
         self.__saved_points.append(point)
+        self.__labels.append(label)
 
     def delete_point(self, point):
         """Delete a saved point.
@@ -283,6 +284,7 @@ class Logic:
         for i, p in enumerate(self.__saved_points):
             if p is point:
                 self.__saved_points.pop(i)
+                self.__labels.pop(i)
                 return i
 
     def get_num_points(self):
@@ -292,6 +294,7 @@ class Logic:
     def delete_points(self):
         """Delete all saved points."""
         self.__saved_points = []
+        self.__labels = []
 
     def save_paths(self):
         """Save the current input and output path for calculation as the user may inspect a different volume during calculation."""
@@ -387,6 +390,8 @@ class Logic:
         :return list: warped coordinates in MNI152 space (RAS)
         :raise mriwarp.SubprocessFailedError: if execution of antsApplyTransformsToPoints failed
         """
+        print('phys2mni coords:', source_coords_ras)
+
         tmp_dir = tempfile.TemporaryDirectory()
 
         # Warp from RAS to LBS because ANTs uses LBS.
@@ -452,7 +457,7 @@ class Logic:
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
 
-        sort_value = 'input containedness' if uncertainty_mm else 'map value'
+        sort_value = 'correlation' if uncertainty_mm else 'map value'
 
         # Transform from subject's voxel to subject's physical space.
         source_coords_ras = self.vox2phys(coords)
@@ -482,32 +487,49 @@ class Logic:
         results = results.dropna(axis=1)
         urls = {}
         for region in results['region']:
-            # siibra_explorer_toolsuite.run(multilevel_human, mni152, self.__parcellation, region)
-            urls[region.name] = 'atlases.ebrains.eu/viewer'
+            urls[region.name] = siibra_explorer_toolsuite.run(multilevel_human, mni152, self.__parcellation, region)
 
         return source_coords_ras[0], target_coords_ras[0], results, urls
 
     def get_modalities(self):
 
-        self.__modalities = {'CellDensityProfile': siibra.features.cellular.CellDensityProfile,
-                      'FunctionalConnectivity': siibra.features.connectivity.FunctionalConnectivity,
-                      'StreamlineCounts': siibra.features.connectivity.StreamlineCounts,
-                      'StreamlineLengths': siibra.features.connectivity.StreamlineLengths,
-                      'ReceptorDensityFingerprint': siibra.features.molecular.ReceptorDensityFingerprint,
-                      'ReceptorDensityProfile': siibra.features.molecular.ReceptorDensityProfile}
-        
         # TODO implement filtering reg. parcellation
-        return self.__modalities.keys()
-
-    def export_assignments(self, modalities):
-        # TODO implement PDF export
+        self.__modalities = ['CellDensityProfile',
+                      'FunctionalConnectivity',
+                      'StreamlineCounts',
+                      'StreamlineLengths',
+                      'ReceptorDensityFingerprint',
+                      'ReceptorDensityProfile']
         
-        # NOTE
-        # Do we want to show the subject's brain with points? -> Point in subject + filename
-        # Do we save the assignment somehow or do we recalculate assignment etc. here?
-        # For which regions do we export the selected modalities?
-            # --> 1. Idea: display assignment in table with checkmarks for export
-            # --> 2. Idea: let user choose correlation > ... --> but what if point uncertainty = 0?
-        # Depending on the feature, another type of visualization is needed (plot vs fingerprint vs ...) --> see Documentation
+        return self.__modalities
+    
+    def get_receptors(self):
+        return siibra.vocabularies.RECEPTOR_SYMBOLS.keys()
 
-        print(modalities)
+    def set_uncertainty(self, uncertainty):
+        self.__uncertainty = uncertainty
+
+    def export_assignments(self, filter, modalities, receptors, cohorts, output_dir):
+        from voluba_mriwarp.reports import AssignmentReport
+
+        report = AssignmentReport(force_overwrite=True, filter = filter)  
+
+        # TODO choose different point to test Receptor + CellDensity plots      
+        
+        # TODO think about removing MNI152 template at beginning
+        # TODO below needs to be different when input is already in mni152! See get_region
+        coords = [siibra.Point(self.__phys2mni([coord])[0], space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+
+        # TODO think about uncertainty == 0 --> filtering doesn't work then
+        # TODO do something when assignments is an empty df because of stupid filtering
+        assignments = report.analyze(coords)
+
+        report.create_report(assignments,
+                            coords,
+                            self.__saved_points,
+                            self.__labels,
+                            self.__nifti_source,
+                            output_dir,
+                            features=modalities,
+                            selected_receptors=receptors, cohorts=cohorts
+                            )

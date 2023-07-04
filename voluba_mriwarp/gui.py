@@ -325,7 +325,8 @@ class App(tk.Tk):
         tk.Label(frame, bg=siibra_highlight_bg, fg='white', font=font_10,
                  justify='left', anchor='w', text='Coordinates').pack(side='left')
         
-        tk.Button(frame, bg = siibra_highlight_bg, fg='white', image=self.__export_icon, relief='flat', justify='right', anchor='e', command=self.__export_assignments).pack(padx=10, side='left')
+        self.__export_btn = tk.Button(frame, bg = siibra_highlight_bg, fg='white', image=self.__export_icon, relief='flat', justify='right', anchor='e', command=self.__export_assignments, state=tk.DISABLED)
+        self.__export_btn.pack(padx=10, side='left')
 
         self.update()
         remaining_height = (self.winfo_height()-self.__data_frame.winfo_height() -
@@ -367,7 +368,7 @@ class App(tk.Tk):
             tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove',
                       command=lambda: self.__reload_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
             tk.Button(self.__point_frame, image=self.__save_icon, command=lambda: self.__save_point(
-                (self.__R.get(), self.__A.get(), self.__S.get()), label=label.get()))
+                (self.__R.get(), self.__A.get(), self.__S.get()), label))
         ]
         for i, widget in enumerate(widgets):
             widget.grid(row=2, column=i, sticky='nswe',
@@ -388,7 +389,6 @@ class App(tk.Tk):
             float(value)
             return True
         except:
-            self.bell()
             return False
 
     def __show_warping_frame(self):
@@ -742,17 +742,21 @@ class App(tk.Tk):
         for widget in widgets:
             widget.destroy()
 
-    def __save_point(self, point, label=''):
+        # TODO check len==0 and disable button
+        if self.logic.get_num_points() == 0:
+            self.__export_btn.configure(state=tk.DISABLED)
+
+    def __save_point(self, point, label):
         """Save a point and add its corresponding widgets.
 
         :param tuple point: point to save
         """
-        self.logic.save_point(point)
+        self.logic.save_point(point, label)
         idx = self.logic.get_num_points()
 
         widgets = [
             tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(
-                value=label if label.rstrip() else idx)),
+                value=label.get() if label.get().rstrip() else idx)),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
                 value=point[0]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
@@ -768,6 +772,8 @@ class App(tk.Tk):
             widget.grid(row=idx+3, column=i, sticky='nswe',
                         padx=5*(i == len(widgets)-1))
         self.__point_widgets.append(widgets)
+
+        self.__export_btn.configure(state=tk.NORMAL)
 
     def __reload_assignment(self, point):
         x, slice, y = self.logic.phys2vox(point)[0]
@@ -910,15 +916,7 @@ class App(tk.Tk):
             self.destroy()
 
     def __export_assignments(self):
-        # NOTE the dialog needs the following
-        # - Modalities available for current parcellation --> get from logic
-        # 
-        # Export region assignments for coordinates in {parcellation}.
-        # Location: [~/voluba-mriwarp/report_{filename}.pdf     ] [...] --> wie in data_frame
-        # Export region assignments: [ ]
-        # Export features: [ ] connectivity [ ] receptor densities [ ] ... --> Radiobuttons oder Checkboxen?
-        # [ Export ] [ Cancel ]
-        # 
+        self.logic.set_uncertainty(float(self.__uncertainty.get()))
         ExportDialog(self, title='Export', logic=self.logic)
 
 class ExportDialog(tk.simpledialog.Dialog):
@@ -929,6 +927,7 @@ class ExportDialog(tk.simpledialog.Dialog):
         super().__init__(parent, title=title)
         
     def body(self, master):
+
         # Explanation
         frame = tk.Frame(master, bg='white', padx=10, pady=10)
         frame.pack(fill='x')
@@ -938,33 +937,95 @@ class ExportDialog(tk.simpledialog.Dialog):
         frame = tk.Frame(master, padx=10, pady=5)
         frame.pack()
         location_frame = tk.Frame(frame)
-        location_frame.pack(anchor='w', pady=5)
+        location_frame.grid(row=0, column=0, pady=5, sticky='w')
         tk.Label(location_frame, text='Location: ', anchor='w').pack(side='left')
-        path_var = tk.StringVar()
-        path = tk.Entry(location_frame, textvariable=path_var, width=39)
-        path.insert(0, os.path.join(mriwarp_home, self.__logic.get_name()+'.pdf'))
+        self.__path_var = tk.StringVar()
+        path = tk.Entry(location_frame, textvariable=self.__path_var, width=39)
+        path.insert(0, os.path.join(mriwarp_home, self.__logic.get_name()))
         path.pack(side='left', padx=10)
-        tk.Button(location_frame, text='...', padx=2.5, command=lambda: self.__select_location(path_var)).pack(side='left')
+        tk.Button(location_frame, text='...', padx=2.5, command=self.__select_location).pack(side='left')
+
+        # Filter
+        filter_frame = tk.Frame(frame)
+        filter_frame.grid(row=1, column=0, sticky='w')
+        tk.Label(filter_frame, text='Export features for regions assigned with:', anchor='w').pack(anchor='w')
+        keys = ['correlation', 'intersection over union', 'map value', 'map weighted mean', 'map containedness', 'input weighted mean', 'input containedness']
+        self.__col = tk.StringVar()
+        ttk.OptionMenu(filter_frame, self.__col, keys[0], *keys).pack(side='left')
+        self.__sign = tk.StringVar()
+        signs = [">", ">=", "=", "<=", "<"]
+        ttk.OptionMenu(filter_frame, self.__sign, signs[0], *signs).pack(side='left')
+        self.__num = tk.DoubleVar()
+        self.__num.set(0.3)
+        vcmd = (self.register(self.__validate_filter), '%P')
+        tk.Entry(filter_frame, textvariable=self.__num, validate='key', validatecommand=vcmd).pack(side='left')
 
         # Export features
-        tk.Label(frame, text='Features: ', anchor='w').pack(anchor='w')
+        feature_frame = tk.Frame(frame)
+        feature_frame.grid(row=2, column=0, sticky='w')
+        tk.Label(feature_frame, text='Features: ', anchor='w').pack(anchor='w')
         self.__export_modalities = {}
         for modality in self.__logic.get_modalities():
             var = tk.IntVar()
             self.__export_modalities[modality] = var
-            tk.Checkbutton(frame, text=modality, variable=var).pack(anchor='w')
+            tk.Checkbutton(feature_frame, text=modality, variable=var, command=lambda modality=modality: self.__visibility(modality)).pack(anchor='w')
 
-    def __select_location(self, path_var):
+        # Export receptors
+        self.__receptor_frame = tk.Frame(frame)
+        self.__receptor_frame.grid(row=3, column=0, sticky='w')
+        tk.Label(self.__receptor_frame, text='Receptors: ', anchor='w', justify='left').grid(row=0, column=0, sticky='w')
+        self.__receptors = {}
+        j = 0
+        for i, receptor in enumerate(self.__logic.get_receptors()):
+            j += (i%4 == 0)
+            var = tk.IntVar()
+            self.__receptors[receptor] = var
+            tk.Checkbutton(self.__receptor_frame, text=receptor, variable=var, anchor='w', justify='left').grid(row=j, column=i%4, sticky='w')
+        self.__visibility('ReceptorDensityProfile')
+
+        # Export cohorts
+        self.__cohort_frame = tk.Frame(frame)
+        self.__cohort_frame.grid(row=4, column=0, sticky='w')
+        tk.Label(self.__cohort_frame, text='Cohorts: ', anchor='w', justify='left').grid(row=0, column=0, sticky='w')
+        self.__cohorts = {}
+        for i, cohort in enumerate(['1000BRAINS', 'HCP']):
+            var = tk.IntVar()
+            self.__cohorts[cohort] = var
+            tk.Checkbutton(self.__cohort_frame, text=cohort, variable=var).grid(row=1, column=i)
+        self.__visibility('StreamlineCounts')
+
+    def __visibility(self, modality):
+        if modality == 'ReceptorDensityProfile':
+            if self.__export_modalities[modality].get() == 0:
+                self.__receptor_frame.grid_remove()
+            else:
+                self.__receptor_frame.grid()
+            self.update()
+        elif modality in ['StreamlineCounts', 'StreamlineLengths', 'FunctionalConnectivity']:
+            if self.__export_modalities[modality].get() == 0:
+                self.__cohort_frame.grid_remove()
+            else:
+                self.__cohort_frame.grid()
+            self.update()
+
+    def __validate_filter(self, value):
+        """Validate if the entered filter is a numerical value."""
+        try:
+            float(value)
+            return True
+        except:
+            return False
+
+    def __select_location(self):
         """Select an export location."""
         # Open the latest given valid folder in the filedialog.
-        filename = filedialog.asksaveasfilename(
-            defaultextension=".pdf", filetypes=(("PDF", "*.pdf"),),
-            initialdir=os.path.dirname(path_var.get()), title='Select export location')
+        foldername = filedialog.askdirectory(
+            initialdir=self.__path_var.get(), title='Select export location')
 
         # Canceling the filedialog returns an empty string.
-        if filename:
-            filename = os.path.normpath(filename)
-        path_var.set(filename)
+        if foldername:
+            foldername = os.path.normpath(foldername)
+            self.__path_var.set(foldername)
 
     def buttonbox(self):
         box = tk.Frame(self)
@@ -980,7 +1041,13 @@ class ExportDialog(tk.simpledialog.Dialog):
         box.pack()
 
     def export(self, event=None):
-        self.__logic.export_assignments([modality for modality in self.__export_modalities if self.__export_modalities[modality].get() == 1])
+
+        # TODO call this in a thread
+        # TODO show progress
+        modalities = [modality for modality in self.__export_modalities if self.__export_modalities[modality].get() == 1]
+        receptors = [receptor for receptor in self.__receptors if self.__receptors[receptor].get() == 1]
+        cohorts = [cohort for cohort in self.__cohorts if self.__cohorts[cohort].get() == 1]
+        self.__logic.export_assignments([self.__col.get(), self.__sign.get(), float(self.__num.get())], modalities, receptors, cohorts, self.__path_var.get())
 
         self.withdraw()
         self.update_idletasks()
