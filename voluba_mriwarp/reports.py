@@ -32,6 +32,8 @@ class AssignmentReport:
         self.pmaps = siibra.get_map(parcellation=parcellation, space=space, maptype=maptype)
 
     def __update_step(self, num_coords):
+        if self.progress.get() == -1:
+            exit(0)
         self.progress.set(self.progress.get() + 100/(num_coords*4)) # there are 4 steps iterating over coordinates (assign, plot pmaps, plot features, create report)
 
     def analyze(self, coordinates, sort_by="correlation"):
@@ -56,17 +58,20 @@ class AssignmentReport:
             labels = [i+1 for i in range(len(coordinates))]
         assert (len(labels) == len(coordinates))
 
+        self.__update_step(0.25)
         from tempfile import mkdtemp
         tmpdir = mkdtemp()
         siibra.logger.info(
             f"Creating pdf report: {reportfile}")
 
         # output directory for intermediate plots
+        self.__update_step(0.25)
         plotdir = os.path.join(tmpdir, "plots")
         if not os.path.isdir(plotdir):
             os.makedirs(plotdir)
 
         # pdf report
+        self.__update_step(0.25)
         if os.path.isfile(reportfile) and not self.overwrite:
             siibra.logger.warn(
                 f"File {reportfile} exists - skipping analysis.")
@@ -76,6 +81,7 @@ class AssignmentReport:
         matplotlib.use("Agg")
 
         # create plot of the input image
+        self.__update_step(0.25)
         if image:
             input_plot = self._plot_input(
                 image, os.path.join(plotdir, 'input.png'))

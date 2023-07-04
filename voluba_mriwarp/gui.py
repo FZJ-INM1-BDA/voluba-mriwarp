@@ -1055,8 +1055,8 @@ class ExportDialog(tk.simpledialog.Dialog):
             widget.destroy()
 
         tk.Label(self, text='Exporting to PDF ...').pack(anchor='w', padx=5, pady=5)
-        progress = tk.IntVar()
-        ttk.Progressbar(self, orient='horizontal', variable=progress, length=200).pack(anchor='w', padx=5, pady=5)
+        self.progress = tk.IntVar()
+        ttk.Progressbar(self, orient='horizontal', variable=self.progress, length=200).pack(anchor='w', padx=5, pady=5)
         tk.Button(self, text="Cancel", width=10, command=self.cancel).pack(padx=5, pady=5)
         self.update()
 
@@ -1065,8 +1065,7 @@ class ExportDialog(tk.simpledialog.Dialog):
         cohorts = [cohort for cohort in self.__cohorts if self.__cohorts[cohort].get() == 1]
         filter = [self.__col.get(), self.__sign.get(), float(self.__num.get())]
 
-        # TODO call this in a thread --> PROBLEM that cancelling is not possible with threading!
-        thread = threading.Thread(target=lambda: self.__logic.export_assignments(filter, modalities, receptors, cohorts, self.__path_var.get(), progress), daemon=True)
+        thread = threading.Thread(target=self.__logic.export_assignments, args=(filter, modalities, receptors, cohorts, self.__path_var.get(), self.progress), daemon=True)
         thread.start()
 
         while thread.is_alive():
@@ -1075,6 +1074,8 @@ class ExportDialog(tk.simpledialog.Dialog):
         self.after(3000, self.cancel)
 
     def cancel(self, event=None):
+        self.progress.set(-1)
+
         # put focus back to the parent window
         if self.parent is not None:
             self.parent.focus_set()
