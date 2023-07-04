@@ -16,18 +16,23 @@ class AssignmentReport:
 
     def __init__(
         self,
+        progress,
         parcellation="julich 2.9",
         space="mni152",
         maptype="statistical",
         filter=['correlation', '>', 0.3],
         resolution_dpi=300,
-        force_overwrite=False
+        force_overwrite=False,
     ):
         self.filter = filter
         self.dpi = resolution_dpi
         self.overwrite = force_overwrite
+        self.progress = progress
 
         self.pmaps = siibra.get_map(parcellation=parcellation, space=space, maptype=maptype)
+
+    def __update_step(self, num_coords):
+        self.progress.set(self.progress.get() + 100/(num_coords*4)) # there are 4 steps iterating over coordinates (assign, plot pmaps, plot features, create report)
 
     def analyze(self, coordinates, sort_by="correlation"):
         """ Run the anatomical assignment for the given coordinates.
@@ -36,6 +41,7 @@ class AssignmentReport:
         # get assignments
         assignments = []
         for coordinate in coordinates:
+            self.__update_step(len(coordinates))
             initial_assignment = self.pmaps.assign(coordinate)
             initial_assignment.sort_values(
                 by=sort_by, ascending=False, inplace=True)
@@ -79,6 +85,7 @@ class AssignmentReport:
         # plot relevant probability maps
         pmap_plots = {}
         for i, assignment in enumerate(assignments):
+            self.__update_step(len(assignments))
             if assignment.empty:
                 continue
             label = labels[i]
@@ -91,8 +98,10 @@ class AssignmentReport:
                 pmap_plots[regionname] = self._plot_pmap(
                     regionname, plotdir, coordinate)
 
+        # plot relevant features
         feature_plots = {}
         for i, assignment in enumerate(assignments):
+            self.__update_step(len(assignments))
             if assignment.empty:
                 continue
             for region in assignment.region.unique():
@@ -285,7 +294,8 @@ class AssignmentReport:
             f"Building pdf report {outfile} for {len(assignments)} coordinates.")
 
         # one page per analyzed component
-        for idx, assignment in enumerate(assignments):            
+        for idx, assignment in enumerate(assignments):  
+            self.__update_step(len(assignments))          
             pdf.add_page()
             pdf.set_font("Helvetica", "BU", 12)
             pdf.cell(40, text_height,

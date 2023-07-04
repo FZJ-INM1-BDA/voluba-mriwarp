@@ -502,12 +502,11 @@ class Logic:
     def set_uncertainty(self, uncertainty):
         self.__uncertainty = uncertainty
 
-    def export_assignments(self, filter, modalities, receptors, cohorts, output_file):
+    def export_assignments(self, filter, modalities, receptors, cohorts, output_file, progress_indicator):
         from voluba_mriwarp.reports import AssignmentReport
 
-        report = AssignmentReport(parcellation=self.__parcellation, force_overwrite=True, filter = filter)
+        report = AssignmentReport(parcellation=self.__parcellation, force_overwrite=True, filter = filter, progress=progress_indicator)
         
-        # TODO when one Connectivity feature is ticked, another is also ticked and then unticked again, the cohorts selection disappears
         # TODO think about using get_region --> PROBLEM: input structure is dropped --> drop this in GUI?
 
         if self.__img_type == 'unaligned':
