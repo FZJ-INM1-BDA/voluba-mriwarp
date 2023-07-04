@@ -44,25 +44,23 @@ class AssignmentReport:
 
         return assignments
 
-    def create_report(self, assignments, coordinates, subject_coordinates, labels, image, outdir, features, selected_receptors, cohorts):
+    def create_report(self, assignments, coordinates, subject_coordinates, labels, image, reportfile, features, selected_receptors, cohorts):
 
         if labels is None:
             labels = [i+1 for i in range(len(coordinates))]
         assert (len(labels) == len(coordinates))
 
-        if outdir is None:
-            from tempfile import mkdtemp
-            outdir = mkdtemp()
+        from tempfile import mkdtemp
+        tmpdir = mkdtemp()
         siibra.logger.info(
-            f"Creating pdf report in output directory: {outdir}")
+            f"Creating pdf report: {reportfile}")
 
         # output directory for intermediate plots
-        plotdir = os.path.join(outdir, "plots")
+        plotdir = os.path.join(tmpdir, "plots")
         if not os.path.isdir(plotdir):
             os.makedirs(plotdir)
 
         # pdf report
-        reportfile = os.path.join(outdir, 'report.pdf')
         if os.path.isfile(reportfile) and not self.overwrite:
             siibra.logger.warn(
                 f"File {reportfile} exists - skipping analysis.")
@@ -81,6 +79,8 @@ class AssignmentReport:
         # plot relevant probability maps
         pmap_plots = {}
         for i, assignment in enumerate(assignments):
+            if assignment.empty:
+                continue
             label = labels[i]
             coordinate = coordinates[i]
             for regionname in tqdm(
@@ -93,6 +93,8 @@ class AssignmentReport:
 
         feature_plots = {}
         for i, assignment in enumerate(assignments):
+            if assignment.empty:
+                continue
             for region in assignment.region.unique():
                 if region in feature_plots.keys():
                     continue
@@ -187,7 +189,6 @@ class AssignmentReport:
             return filenames
 
     def _select_assignments(self, initial_assignments):
-        # TODO filter doesn't work
         mapping = {
             '<': lambda column, value: column < value,
             '>': lambda column, value: column > value,
@@ -198,7 +199,7 @@ class AssignmentReport:
         results = []
         for component_id in range(initial_assignments['input structure'].max()+1):
             for _, (_, row) in enumerate(initial_assignments[lambda df: df['input structure'] == component_id].iterrows()):
-                if mapping[sign](row[column], value):
+                if row[column] and mapping[sign](row[column], value):
                     results.append(row)
 
         return pd.DataFrame(results)
@@ -284,8 +285,7 @@ class AssignmentReport:
             f"Building pdf report {outfile} for {len(assignments)} coordinates.")
 
         # one page per analyzed component
-        for idx, assignment in enumerate(assignments):
-            components = assignment['input structure'].unique()
+        for idx, assignment in enumerate(assignments):            
             pdf.add_page()
             pdf.set_font("Helvetica", "BU", 12)
             pdf.cell(40, text_height,
@@ -295,7 +295,14 @@ class AssignmentReport:
             pdf.set_xy(left, 14 + text_height)
             pdf.multi_cell(0, text_height,
                            f"Coordinate in subject space: \t{subj_coords[idx]} [mm]\nCoordinate in {siibra.spaces['mni152'].name}: {coords[idx].coordinate} [mm]")
+            
+            if assignment.empty:
+                pdf.set_xy(left, 2 * (14 + text_height))
+                pdf.multi_cell(0, text_height,
+                           f"No regions assigned with {self.filter[0]} {self.filter[1]} {self.filter[2]}.")
+                continue
 
+            components = assignment['input structure'].unique()
             selection = pd.concat([assignment[lambda d: d['input structure'] == component]
                                   for component in components])
 
@@ -318,7 +325,10 @@ class AssignmentReport:
                     values = table.row()
                     for col in selection.columns[2:]:
                         header.cell(col)
-                        values.cell(f'{row[col]:.2f}')
+                        if row[col]:
+                            values.cell(f'{row[col]:.6f}')
+                        else:
+                            values.cell('')
 
                 pdf.set_xy(left, pdf.get_y() + 5)
                 pdf.image(pmap_plots[row.region], h=plot_height)

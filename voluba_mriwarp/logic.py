@@ -213,7 +213,7 @@ class Logic:
             if parcellation.supports_space(mni152) and pmap:
                 self.__mni152_parcellations.append(parcellation.shortname)
 
-        self.set_parcellation('julich 2.9')
+        self.set_parcellation('julich 3.0')
 
     def get_in_path(self):
         """Return the path to the input NIfTI."""
@@ -390,8 +390,6 @@ class Logic:
         :return list: warped coordinates in MNI152 space (RAS)
         :raise mriwarp.SubprocessFailedError: if execution of antsApplyTransformsToPoints failed
         """
-        print('phys2mni coords:', source_coords_ras)
-
         tmp_dir = tempfile.TemporaryDirectory()
 
         # Warp from RAS to LBS because ANTs uses LBS.
@@ -463,16 +461,11 @@ class Logic:
         source_coords_ras = self.vox2phys(coords)
 
         if self.__img_type == 'unaligned':
-            maptype = 'statistical'
             target_coords_ras = self.__phys2mni(source_coords_ras)
-        elif self.__img_type == 'aligned':
-            maptype = 'statistical'
-            target_coords_ras = source_coords_ras
         else:
-            maptype = 'labelled'
             target_coords_ras = source_coords_ras
 
-        map = siibra.get_map(self.__parcellation, mni152, maptype=maptype)
+        map = siibra.get_map(self.__parcellation, mni152, maptype='statistical')
         target = siibra.Point(
             target_coords_ras[0], space=mni152, sigma_mm=uncertainty_mm)
 
@@ -509,27 +502,26 @@ class Logic:
     def set_uncertainty(self, uncertainty):
         self.__uncertainty = uncertainty
 
-    def export_assignments(self, filter, modalities, receptors, cohorts, output_dir):
+    def export_assignments(self, filter, modalities, receptors, cohorts, output_file):
         from voluba_mriwarp.reports import AssignmentReport
 
-        report = AssignmentReport(force_overwrite=True, filter = filter)  
-
-        # TODO choose different point to test Receptor + CellDensity plots      
+        report = AssignmentReport(parcellation=self.__parcellation, force_overwrite=True, filter = filter)
         
-        # TODO think about removing MNI152 template at beginning
-        # TODO below needs to be different when input is already in mni152! See get_region
-        coords = [siibra.Point(self.__phys2mni([coord])[0], space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+        # TODO when one Connectivity feature is ticked, another is also ticked and then unticked again, the cohorts selection disappears
+        # TODO think about using get_region --> PROBLEM: input structure is dropped --> drop this in GUI?
 
-        # TODO think about uncertainty == 0 --> filtering doesn't work then
-        # TODO do something when assignments is an empty df because of stupid filtering
+        if self.__img_type == 'unaligned':
+            coords = [siibra.Point(self.__phys2mni([coord])[0], space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+        else:
+            coords = [siibra.Point(coord, space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+
         assignments = report.analyze(coords)
-
         report.create_report(assignments,
                             coords,
                             self.__saved_points,
-                            self.__labels,
+                            [label.get() for label in self.__labels],
                             self.__nifti_source,
-                            output_dir,
+                            output_file,
                             features=modalities,
                             selected_receptors=receptors, cohorts=cohorts
                             )

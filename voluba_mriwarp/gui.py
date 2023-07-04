@@ -280,7 +280,7 @@ class App(tk.Tk):
         uncertainty_frame.pack(fill='x', padx=15)
         tk.Label(uncertainty_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
                  text='Point uncertainty:', width=15).grid(row=0, column=0, sticky='w')
-        vcmd = (self.register(self.__validate_uncertainty), '%P')
+        vcmd = (self.register(self.__validate_float), '%P')
         self.__uncertainty = tk.Spinbox(uncertainty_frame, from_=0, to=100, validate='key', validatecommand=vcmd,
                                         increment=0.1, format='%.2f', width=5)
         self.__uncertainty.grid(row=0, column=1, sticky='w', padx=10)
@@ -360,11 +360,12 @@ class App(tk.Tk):
         # add point (manually or by clicking)
         label = tk.StringVar()
         self.__R, self.__A, self.__S = tk.DoubleVar(), tk.DoubleVar(), tk.DoubleVar()
+        vcmd = (self.register(self.__validate_float), '%P')
         widgets = [
             tk.Entry(self.__point_frame, width=10, textvariable=label),
-            tk.Entry(self.__point_frame, textvariable=self.__R, width=10),
-            tk.Entry(self.__point_frame, textvariable=self.__A, width=10),
-            tk.Entry(self.__point_frame, textvariable=self.__S, width=10),
+            tk.Entry(self.__point_frame, textvariable=self.__R, width=10, validate='key', validatecommand=vcmd),
+            tk.Entry(self.__point_frame, textvariable=self.__A, width=10, validate='key', validatecommand=vcmd),
+            tk.Entry(self.__point_frame, textvariable=self.__S, width=10, validate='key', validatecommand=vcmd),
             tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove',
                       command=lambda: self.__reload_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
             tk.Button(self.__point_frame, image=self.__save_icon, command=lambda: self.__save_point(
@@ -383,8 +384,8 @@ class App(tk.Tk):
             self.__assignment_frame, bg=siibra_highlight_bg)
         self.__region_frame.pack(fill='both', expand=True)
 
-    def __validate_uncertainty(self, value):
-        """Validate if the entered uncertainty is a numerical value."""
+    def __validate_float(self, value):
+        """Validate if the entered value is a numerical value."""
         try:
             float(value)
             return True
@@ -742,7 +743,6 @@ class App(tk.Tk):
         for widget in widgets:
             widget.destroy()
 
-        # TODO check len==0 and disable button
         if self.logic.get_num_points() == 0:
             self.__export_btn.configure(state=tk.DISABLED)
 
@@ -751,12 +751,13 @@ class App(tk.Tk):
 
         :param tuple point: point to save
         """
-        self.logic.save_point(point, label)
+        new_label = tk.StringVar()
+        self.logic.save_point(point, new_label)
         idx = self.logic.get_num_points()
+        new_label.set(label.get() if label.get().rstrip() else idx)
 
         widgets = [
-            tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(
-                value=label.get() if label.get().rstrip() else idx)),
+            tk.Entry(self.__point_frame, width=10, textvariable=new_label),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
                 value=point[0]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
@@ -916,6 +917,9 @@ class App(tk.Tk):
             self.destroy()
 
     def __export_assignments(self):
+        type = 'template' if self.logic.get_in_path(
+        ) == mni_template else 'aligned' if self.__mni.get() == 1 else 'unaligned'
+        self.logic.set_img_type(type)
         self.logic.set_uncertainty(float(self.__uncertainty.get()))
         ExportDialog(self, title='Export', logic=self.logic)
 
@@ -941,7 +945,7 @@ class ExportDialog(tk.simpledialog.Dialog):
         tk.Label(location_frame, text='Location: ', anchor='w').pack(side='left')
         self.__path_var = tk.StringVar()
         path = tk.Entry(location_frame, textvariable=self.__path_var, width=39)
-        path.insert(0, os.path.join(mriwarp_home, self.__logic.get_name()))
+        path.insert(0, os.path.join(mriwarp_home, self.__logic.get_name() + '.pdf'))
         path.pack(side='left', padx=10)
         tk.Button(location_frame, text='...', padx=2.5, command=self.__select_location).pack(side='left')
 
@@ -1019,13 +1023,14 @@ class ExportDialog(tk.simpledialog.Dialog):
     def __select_location(self):
         """Select an export location."""
         # Open the latest given valid folder in the filedialog.
-        foldername = filedialog.askdirectory(
-            initialdir=self.__path_var.get(), title='Select export location')
+        filename = filedialog.asksaveasfilename(
+            confirmoverwrite=True, filetypes=[('PDF', '*.pdf')], initialfile=os.path.basename(self.__path_var.get()),
+            defaultextension='.pdf', initialdir=os.path.dirname(self.__path_var.get()), title='Select export location')
 
         # Canceling the filedialog returns an empty string.
-        if foldername:
-            foldername = os.path.normpath(foldername)
-            self.__path_var.set(foldername)
+        if filename:
+            filename = os.path.normpath(filename)
+            self.__path_var.set(filename)
 
     def buttonbox(self):
         box = tk.Frame(self)
@@ -1042,6 +1047,9 @@ class ExportDialog(tk.simpledialog.Dialog):
 
     def export(self, event=None):
 
+        # TODO ask Xiao if region.spatial_props(space, 'statistical') can be used because e.g. for Julich Brain 3.0 Acbl there is an error for 'labelled'
+        
+        # TODO disable export button when new volume is loaded
         # TODO call this in a thread
         # TODO show progress
         modalities = [modality for modality in self.__export_modalities if self.__export_modalities[modality].get() == 1]
