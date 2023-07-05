@@ -928,6 +928,7 @@ class ExportDialog(tk.simpledialog.Dialog):
     
     def __init__(self, parent, title, logic):
         self.__logic = logic
+        self.progress = tk.IntVar()
 
         super().__init__(parent, title=title)
         
@@ -985,7 +986,8 @@ class ExportDialog(tk.simpledialog.Dialog):
             j += (i%4 == 0)
             var = tk.IntVar()
             self.__receptors[receptor] = var
-            tk.Checkbutton(self.__receptor_frame, text=receptor, variable=var, anchor='w', justify='left').grid(row=j, column=i%4, sticky='w')
+            tk.Checkbutton(self.__receptor_frame, text=receptor, variable=var, anchor='w', justify='left', command=self.__check_receptor).grid(row=j, column=i%4, sticky='w')
+        self.__check_receptor()
         self.__visibility('ReceptorDensityProfile')
 
         # Export cohorts
@@ -996,8 +998,17 @@ class ExportDialog(tk.simpledialog.Dialog):
         for i, cohort in enumerate(['1000BRAINS', 'HCP']):
             var = tk.IntVar()
             self.__cohorts[cohort] = var
-            tk.Checkbutton(self.__cohort_frame, text=cohort, variable=var).grid(row=1, column=i)
+            tk.Checkbutton(self.__cohort_frame, text=cohort, variable=var, command=self.__check_cohort).grid(row=1, column=i)
+        self.__check_cohort()
         self.__visibility('StreamlineCounts')
+
+    def __check_receptor(self):
+        if sum([var.get() for var in self.__receptors.values()]) == 0:
+            self.__receptors[list(self.__receptors.keys())[0]].set(1)
+
+    def __check_cohort(self):
+        if sum([var.get() for var in self.__cohorts.values()]) == 0:
+            self.__cohorts['1000BRAINS'].set(1)
 
     def __visibility(self, modality):
         connectivity = ['StreamlineCounts', 'StreamlineLengths', 'FunctionalConnectivity']
@@ -1049,13 +1060,10 @@ class ExportDialog(tk.simpledialog.Dialog):
 
     def export(self, event=None):
 
-        # TODO ask Xiao if region.spatial_props(space, 'statistical') can be used because e.g. for Julich Brain 3.0 Acbl there is an error for 'labelled'
-
         for widget in self.winfo_children():
             widget.destroy()
 
         tk.Label(self, text='Exporting to PDF ...').pack(anchor='w', padx=5, pady=5)
-        self.progress = tk.IntVar()
         ttk.Progressbar(self, orient='horizontal', variable=self.progress, length=200).pack(anchor='w', padx=5, pady=5)
         tk.Button(self, text="Cancel", width=10, command=self.cancel).pack(padx=5, pady=5)
         self.update()
