@@ -89,20 +89,20 @@ class Logic:
         else:
             raise ValueError(self.__error)
 
-    def set_json_path(self, json_path):
+    def set_parameters_path(self, json_path):
         """Set the path to the parameter JSON.
 
         :param str json_path: path to the parameter JSON
         :raise ValueError: if path or JSON is not valid
         """
-        if self.check_json_path(json_path):
+        if self.check_parameters_path(json_path):
             parameters = json.load(open(json_path, 'r'))
             if self.check_json(parameters):
                 self.__parameters = parameters
         else:
             raise ValueError(self.__error)
 
-    def check_json_path(self, json_path):
+    def check_parameters_path(self, json_path):
         """Check if the JSON path is valid.
 
         :param str json_path: path to the parameter JSON
@@ -181,7 +181,7 @@ class Logic:
 
     def get_name(self):
         return self.__name
-    
+
     def __set_name(self):
         """Set the name of the file without the file extension."""
         if self.__in_path.endswith('.nii.gz'):
@@ -321,7 +321,7 @@ class Logic:
         except Exception as e:
             raise SubprocessFailedError(str(e))
 
-    def register(self):
+    def warp(self):
         """Register the stripped input brain to MNI152 space using ANTs
 
         :raise mriwarp.SubprocessFailedError: if execution of antsRegistration failed
@@ -383,7 +383,7 @@ class Logic:
         if self.__in_path == self.__in_path_calc and self.__out_path == self.__out_path_calc:
             self.__transform_path = transform+'InverseComposite.h5'
 
-    def __phys2mni(self, source_coords_ras):
+    def __warp_phys2mni(self, source_coords_ras):
         """Warp coordinates from subject's physical to MNI152 space using the transform matrix.
 
         :param list source_coords_ras: coordinates in subject's physical space (RAS)
@@ -425,7 +425,7 @@ class Logic:
         # Warp from LBS to RAS because nibabel and numpy use RAS.
         return (target_coords_lbs * (-1, -1, 1)).tolist()
 
-    def vox2phys(self, coords):
+    def warp_vox2phys(self, coords):
         """Warp coordinates from subject's voxel to physical space.
 
         :param list source_coords_ras: coordinates in voxel space
@@ -434,7 +434,7 @@ class Logic:
         vox2phys = self.__nifti_source.affine
         return [nib.affines.apply_affine(vox2phys, coords)]
 
-    def phys2vox(self, coords):
+    def warp_phys2vox(self, coords):
         """Warp coordinates from subject's physical to voxel space.
 
         :param list source_coords_ras: coordinates in physical space
@@ -444,7 +444,7 @@ class Logic:
         phys2vox = np.linalg.inv(vox2phys)
         return [nib.affines.apply_affine(phys2vox, coords)]
 
-    def get_regions(self, coords, uncertainty_mm):
+    def assign_regions2points(self, coords, uncertainty_mm):
         """Assign subject voxel coordinates to regions in the Julich Brain Atlas.
 
         :param list coords: coordinates in subject's voxel space
@@ -458,14 +458,15 @@ class Logic:
         sort_value = 'correlation' if uncertainty_mm else 'map value'
 
         # Transform from subject's voxel to subject's physical space.
-        source_coords_ras = self.vox2phys(coords)
+        source_coords_ras = self.warp_vox2phys(coords)
 
         if self.__img_type == 'unaligned':
-            target_coords_ras = self.__phys2mni(source_coords_ras)
+            target_coords_ras = self.__warp_phys2mni(source_coords_ras)
         else:
             target_coords_ras = source_coords_ras
 
-        map = siibra.get_map(self.__parcellation, mni152, maptype='statistical')
+        map = siibra.get_map(self.__parcellation, mni152,
+                             maptype='statistical')
         target = siibra.Point(
             target_coords_ras[0], space=mni152, sigma_mm=uncertainty_mm)
 
@@ -480,22 +481,23 @@ class Logic:
         results = results.dropna(axis=1)
         urls = {}
         for region in results['region']:
-            urls[region.name] = siibra_explorer_toolsuite.run(multilevel_human, mni152, self.__parcellation, region)
+            urls[region.name] = siibra_explorer_toolsuite.run(
+                multilevel_human, mni152, self.__parcellation, region)
 
         return source_coords_ras[0], target_coords_ras[0], results, urls
 
-    def get_modalities(self):
+    def get_features(self):
 
         # TODO implement filtering reg. parcellation
         self.__modalities = ['CellDensityProfile',
-                      'FunctionalConnectivity',
-                      'StreamlineCounts',
-                      'StreamlineLengths',
-                      'ReceptorDensityFingerprint',
-                      'ReceptorDensityProfile']
-        
+                             'FunctionalConnectivity',
+                             'StreamlineCounts',
+                             'StreamlineLengths',
+                             'ReceptorDensityFingerprint',
+                             'ReceptorDensityProfile']
+
         return self.__modalities
-    
+
     def get_receptors(self):
         return siibra.vocabularies.RECEPTOR_SYMBOLS.keys()
 
@@ -505,22 +507,23 @@ class Logic:
     def export_assignments(self, filter, modalities, receptors, cohorts, output_file, progress_indicator):
         from voluba_mriwarp.reports import AssignmentReport
 
-        report = AssignmentReport(parcellation=self.__parcellation, force_overwrite=True, filter = filter, progress=progress_indicator)
-        
-        # TODO think about using get_region --> PROBLEM: input structure is dropped --> drop this in GUI?
+        report = AssignmentReport(parcellation=self.__parcellation,
+                                  force_overwrite=True, filter=filter, progress=progress_indicator)
 
         if self.__img_type == 'unaligned':
-            coords = [siibra.Point(self.__phys2mni([coord])[0], space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+            coords = [siibra.Point(self.__warp_phys2mni([coord])[
+                                   0], space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
         else:
-            coords = [siibra.Point(coord, space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+            coords = [siibra.Point(coord, space='mni152', sigma_mm=self.__uncertainty)
+                      for coord in self.__saved_points]
 
         assignments = report.analyze(coords)
         report.create_report(assignments,
-                            coords,
-                            self.__saved_points,
-                            [label.get() for label in self.__labels],
-                            self.__nifti_source,
-                            output_file,
-                            features=modalities,
-                            selected_receptors=receptors, cohorts=cohorts
-                            )
+                             coords,
+                             self.__saved_points,
+                             [label.get() for label in self.__labels],
+                             self.__nifti_source,
+                             output_file,
+                             features=modalities,
+                             selected_receptors=receptors, cohorts=cohorts
+                             )

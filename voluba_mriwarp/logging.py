@@ -10,12 +10,19 @@ class Logger():
     """Stream that redirects writes to a logger"""
 
     def __init__(self, logger, level):
-        """Initialize the stream."""
+        """Initialize the stream.
+        
+        :param logging.Logger logger: logger to write to
+        :param int level: logging level
+        """
         self.logger = logger
         self.level = level
 
     def write(self, text):
-        """Redirect a write to the logger."""
+        """Redirect a write to the logger.
+        
+        :param str text: text to log
+        """
         for line in text.rstrip().splitlines():
             self.logger.log(self.level, line.rstrip())
 
@@ -25,15 +32,16 @@ class Logger():
 
 def setup_logger():
     """Setup a logger that also captures stdout and stderr."""
-    tmpfile = os.path.join(tempfile.gettempdir(), f'{mriwarp_name}.log')
+    # Write the log to a temporary file.
+    tmp_file = os.path.join(tempfile.gettempdir(), f'{mriwarp_name}.log')
     logging.basicConfig(
-        level=logging.DEBUG,
+        filename=tmp_file,
+        filemode='w',
         format='[%(name)s:%(levelname)s] %(asctime)s %(message)s',
         datefmt='%d/%m/%Y %H:%M:%S',
-        filename=tmpfile,
-        filemode='w'
+        level=logging.DEBUG
     )
     logger = logging.getLogger(mriwarp_name)
-    # to capture output of HD_BET and other modules
+    # Redirect the stream to capture the output of HD_BET and other modules.
     sys.stdout = Logger(logger, logging.INFO)
     sys.stderr = Logger(logger, logging.ERROR)

@@ -4,11 +4,10 @@ from datetime import datetime
 import matplotlib
 import matplotlib.pyplot as plt
 import nibabel as nib
-import numpy as np
 import pandas as pd
 import siibra
-from fpdf import FPDF, fonts
-from nilearn import image, plotting
+from fpdf import FPDF
+from nilearn import plotting
 from tqdm import tqdm
 
 
@@ -29,12 +28,14 @@ class AssignmentReport:
         self.overwrite = force_overwrite
         self.progress = progress
 
-        self.pmaps = siibra.get_map(parcellation=parcellation, space=space, maptype=maptype)
+        self.pmaps = siibra.get_map(
+            parcellation=parcellation, space=space, maptype=maptype)
 
     def __update_step(self, num_coords):
         if self.progress.get() == -1:
             exit(0)
-        self.progress.set(self.progress.get() + 100/(num_coords*4)) # there are 4 steps iterating over coordinates (assign, plot pmaps, plot features, create report)
+        # there are 4 steps iterating over coordinates (assign, plot pmaps, plot features, create report)
+        self.progress.set(self.progress.get() + 100/(num_coords*4))
 
     def analyze(self, coordinates, sort_by="correlation"):
         """ Run the anatomical assignment for the given coordinates.
@@ -210,7 +211,8 @@ class AssignmentReport:
             '=': lambda column, value: column == value
         }
         column, sign, value = self.filter
-        initial_assignments = initial_assignments.drop(['centroid', 'volume', 'fragment'], axis=1)
+        initial_assignments = initial_assignments.drop(
+            ['centroid', 'volume', 'fragment'], axis=1)
         results = []
         for component_id in range(initial_assignments['input structure'].max()+1):
             for _, (_, row) in enumerate(initial_assignments[lambda df: df['input structure'] == component_id].iterrows()):
@@ -300,8 +302,8 @@ class AssignmentReport:
             f"Building pdf report {outfile} for {len(assignments)} coordinates.")
 
         # one page per analyzed component
-        for idx, assignment in enumerate(assignments):  
-            self.__update_step(len(assignments))          
+        for idx, assignment in enumerate(assignments):
+            self.__update_step(len(assignments))
             pdf.add_page()
             pdf.set_font("Helvetica", "BU", 12)
             pdf.cell(40, text_height,
@@ -311,11 +313,11 @@ class AssignmentReport:
             pdf.set_xy(left, 14 + text_height)
             pdf.multi_cell(0, text_height,
                            f"Coordinate in subject space: \t{subj_coords[idx]} [mm]\nCoordinate in {siibra.spaces['mni152'].name}: {coords[idx].coordinate} [mm]")
-            
+
             if assignment.empty:
                 pdf.set_xy(left, 2 * (14 + text_height))
                 pdf.multi_cell(0, text_height,
-                           f"No regions assigned with {self.filter[0]} {self.filter[1]} {self.filter[2]}.")
+                               f"No regions assigned with {self.filter[0]} {self.filter[1]} {self.filter[2]}.")
                 continue
 
             components = assignment['input structure'].unique()
@@ -328,12 +330,12 @@ class AssignmentReport:
                 desc=f"- Page #{idx}",
                 unit="assignments",
             ):
-                                
+
                 pdf.set_font("Helvetica", "B", 10)
                 pdf.set_xy(left, pdf.get_y() + text_height + 10)
                 pdf.cell(40, text_height,
                          f"Coordinate {labels[idx]} assigned to {row.region}")
-                
+
                 pdf.set_font("Helvetica", "", 5)
                 pdf.set_xy(left, pdf.get_y() + 5)
                 with pdf.table() as table:
@@ -353,17 +355,19 @@ class AssignmentReport:
                     pdf.set_font("Helvetica", "B", 10)
                     pdf.set_xy(left, pdf.get_y() + 10)
                     pdf.cell(40, text_height, feature)
-                    
+
                     pdf.set_x(left)
                     y = pdf.get_y()
                     if feature_plots[row.region][feature]:
                         for k, filename in enumerate(feature_plots[row.region][feature]):
-                            pdf.set_xy(pdf.get_x() + k%2 * pdf.epw * 0.5, y + 10)
+                            pdf.set_xy(pdf.get_x() + k %
+                                       2 * pdf.epw * 0.5, y + 10)
                             pdf.image(filename, w=pdf.epw * 0.4)
                     else:
                         pdf.set_font("Helvetica", "", 10)
                         pdf.set_xy(left, pdf.get_y() + 10)
-                        pdf.multi_cell(0, text_height, f'There is no {feature} information available for {row.region}.')
+                        pdf.multi_cell(
+                            0, text_height, f'There is no {feature} information available for {row.region}.')
 
         siibra.logger.info(f"Report written to {outfile}")
         pdf.output(outfile)

@@ -1,8 +1,6 @@
 class SubprocessFailedError(Exception):
-    """Failed subprocess."""
-    pass
+    """Indicator that the subprocess failed"""
 
 
 class PointNotFoundError(Exception):
-    """Point not found in specified space."""
-    pass
+    """Indicator that the point was not found in the specified space"""
