@@ -1,16 +1,19 @@
+import json
 import logging
 import os
 import platform
 import subprocess
 import tempfile
-import json
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
+import siibra
+import siibra_explorer_toolsuite
 from HD_BET.run import run_hd_bet
+from HD_BET.utils import maybe_download_parameters
 
-from voluba_mriwarp.config import mriwarp_name, mni_template
+from voluba_mriwarp.config import mni_template, mriwarp_name
 from voluba_mriwarp.exceptions import *
 
 
@@ -80,26 +83,26 @@ class Logic:
             self.__in_path = in_path
             self.__set_name()
             transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
-                         f'_transformationInverseComposite.h5'
+                f'_transformationInverseComposite.h5'
             self.set_transform_path(transform_path)
             self.load_source()
         else:
             raise ValueError(self.__error)
-        
-    def set_json_path(self, json_path):
+
+    def set_parameters_path(self, json_path):
         """Set the path to the parameter JSON.
-        
+
         :param str json_path: path to the parameter JSON
         :raise ValueError: if path or JSON is not valid
         """
-        if self.check_json_path(json_path):
+        if self.check_parameters_path(json_path):
             parameters = json.load(open(json_path, 'r'))
             if self.check_json(parameters):
                 self.__parameters = parameters
         else:
             raise ValueError(self.__error)
 
-    def check_json_path(self, json_path):
+    def check_parameters_path(self, json_path):
         """Check if the JSON path is valid.
 
         :param str json_path: path to the parameter JSON
@@ -131,7 +134,7 @@ class Logic:
             if not 'stages' in value.keys():
                 return False
         return True
-    
+
     def check_transform_path(self, transform_path):
         """Check if the transformation file path is valid.
 
@@ -154,7 +157,7 @@ class Logic:
 
     def set_transform_path(self, transform_path):
         """Set the path to the transform matrix.
-        
+
         :param str transform_path: path to the transform matrix
         """
         if self.check_transform_path(transform_path):
@@ -171,10 +174,13 @@ class Logic:
         if self.check_out_path(out_path):
             self.__out_path = out_path
             transform_path = f'{os.path.normpath(os.path.join(self.__out_path, self.__name))}' \
-                         f'_transformationInverseComposite.h5'
+                f'_transformationInverseComposite.h5'
             self.set_transform_path(transform_path)
         else:
             raise ValueError(self.__error)
+
+    def get_name(self):
+        return self.__name
 
     def __set_name(self):
         """Set the name of the file without the file extension."""
@@ -196,9 +202,6 @@ class Logic:
 
     def preload(self):
         """Preload HD_BET parameters, siibra and its components to speed up region assignment."""
-        import siibra
-        from HD_BET.utils import maybe_download_parameters
-
         maybe_download_parameters(0)
 
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
@@ -208,12 +211,9 @@ class Logic:
         for parcellation in multilevel_human.parcellations:
             pmap = siibra.get_map(parcellation, mni152, maptype='statistical')
             if parcellation.supports_space(mni152) and pmap:
-                    self.__mni152_parcellations.append(parcellation.shortname)
-                    # TODO Cache the pmaps
-                    # if isinstance(pmap, siibra.volumes.sparsemap.SparseMap):
-                    #     _ = pmap.sparse_index
+                self.__mni152_parcellations.append(parcellation.shortname)
 
-        self.set_parcellation('julich 2.9')
+        self.set_parcellation('julich 3.0')
 
     def get_in_path(self):
         """Return the path to the input NIfTI."""
@@ -234,17 +234,16 @@ class Logic:
     def get_numpy_source(self):
         """Return the input NIfTI as numpy.ndarray"""
         return self.__numpy_source
-    
+
     def get_parcellations(self):
         """Return all available parcellations for MNI152 nonlinear asymmetric."""
         return self.__mni152_parcellations
-    
+
     def set_parcellation(self, parcellation):
         """Set the parcellation that is used for region assignment.
-        
+
         :param str parcellation: name of the parcellation to use
         """
-        import siibra
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         self.__parcellation = multilevel_human.get_parcellation(parcellation)
 
@@ -267,32 +266,35 @@ class Logic:
     def get_img_type(self):
         """Return the image type."""
         return self.__img_type
-    
-    def save_point(self, point):
+
+    def save_point(self, point, label):
         """Save a selected point.
-        
+
         :param tuple point: point to save
         """
         self.__saved_points.append(point)
+        self.__labels.append(label)
 
     def delete_point(self, point):
         """Delete a saved point.
-        
+
         :param tuple point: point to delete
         :return int: index of the point in the list of saved points
         """
         for i, p in enumerate(self.__saved_points):
             if p is point:
                 self.__saved_points.pop(i)
+                self.__labels.pop(i)
                 return i
-    
+
     def get_num_points(self):
         """Get number of saved points"""
         return len(self.__saved_points)
-    
+
     def delete_points(self):
         """Delete all saved points."""
         self.__saved_points = []
+        self.__labels = []
 
     def save_paths(self):
         """Save the current input and output path for calculation as the user may inspect a different volume during calculation."""
@@ -319,7 +321,7 @@ class Logic:
         except Exception as e:
             raise SubprocessFailedError(str(e))
 
-    def register(self):
+    def warp(self):
         """Register the stripped input brain to MNI152 space using ANTs
 
         :raise mriwarp.SubprocessFailedError: if execution of antsRegistration failed
@@ -328,17 +330,11 @@ class Logic:
         moving = os.path.normpath(self.__reorient_path_calc)
         mask = os.path.normpath(os.path.join(
             self.__out_path_calc, f'{self.__name_calc}_stripped_mask.nii.gz'))
-        
-        # TODO idea: To define an own ANTs registration command, the user has the following macros to specify parameters:
-        # OUTPATH; INPATH; NAME; FIXED; MOVING; MASK; TRANSFORM; VOLUME.
-        # The GUI will be altered (on another branch) by separating warping and region assignment.
-        # This way, the user that used an own registration, can specify the transformation file that needs to be used.
-        # If the user selects one of the predefined registrations (default, optimised), voluba-mriwarp will automatically
-        # find the OUTPATH/NAME_transformationInverseComposite.h5 in OUTPATH (clarify if OUTPATH is always ~/voluba-mriwarp for region assignment
-        # or the one that is currently used in the warping tab)
-        
-        transform = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_transformation'))
-        volume = os.path.normpath(os.path.join(self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
+
+        transform = os.path.normpath(os.path.join(
+            self.__out_path_calc, f'{self.__name_calc}_transformation'))
+        volume = os.path.normpath(os.path.join(
+            self.__out_path_calc, f'{self.__name_calc}_registered.nii.gz'))
 
         commands = []
         for command in self.__parameters.keys():
@@ -366,7 +362,7 @@ class Logic:
 
         if platform.system() == 'Linux':
             for i in range(len(commands)):
-                commands[i] = [commands[i]]    
+                commands[i] = [commands[i]]
         else:
             for i in range(len(commands)):
                 commands[i] = commands[i].split(' ')
@@ -376,15 +372,18 @@ class Logic:
                 logging.getLogger(mriwarp_name).info(f'Executing: {command}')
                 result = subprocess.run(command, stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE, check=True, shell=True)
-                logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
+                logging.getLogger(mriwarp_name).info(
+                    result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
-            logging.getLogger(mriwarp_name).error(e.output.decode('utf-8').split('ERROR: ')[0].rstrip())
-            raise SubprocessFailedError(e.output.decode('utf-8').split('ERROR: ')[-1].rstrip())
+            logging.getLogger(mriwarp_name).error(
+                e.output.decode('utf-8').split('ERROR: ')[0].rstrip())
+            raise SubprocessFailedError(e.output.decode(
+                'utf-8').split('ERROR: ')[-1].rstrip())
 
         if self.__in_path == self.__in_path_calc and self.__out_path == self.__out_path_calc:
             self.__transform_path = transform+'InverseComposite.h5'
 
-    def __phys2mni(self, source_coords_ras):
+    def __warp_phys2mni(self, source_coords_ras):
         """Warp coordinates from subject's physical to MNI152 space using the transform matrix.
 
         :param list source_coords_ras: coordinates in subject's physical space (RAS)
@@ -415,7 +414,8 @@ class Logic:
                                     stderr=subprocess.PIPE, check=True, shell=True)
             logging.getLogger(mriwarp_name).info(result.stdout.decode('utf-8'))
         except subprocess.CalledProcessError as e:
-            logging.getLogger(mriwarp_name).error(e.output.decode('utf-8').split('ERROR: ')[0].rstrip())
+            logging.getLogger(mriwarp_name).error(
+                e.output.decode('utf-8').split('ERROR: ')[0].rstrip())
             raise SubprocessFailedError(e.output.decode('utf-8').rstrip())
 
         target_pts = pd.read_csv(
@@ -425,7 +425,7 @@ class Logic:
         # Warp from LBS to RAS because nibabel and numpy use RAS.
         return (target_coords_lbs * (-1, -1, 1)).tolist()
 
-    def vox2phys(self, coords):
+    def warp_vox2phys(self, coords):
         """Warp coordinates from subject's voxel to physical space.
 
         :param list source_coords_ras: coordinates in voxel space
@@ -433,8 +433,8 @@ class Logic:
         """
         vox2phys = self.__nifti_source.affine
         return [nib.affines.apply_affine(vox2phys, coords)]
-    
-    def phys2vox(self, coords):
+
+    def warp_phys2vox(self, coords):
         """Warp coordinates from subject's physical to voxel space.
 
         :param list source_coords_ras: coordinates in physical space
@@ -444,7 +444,7 @@ class Logic:
         phys2vox = np.linalg.inv(vox2phys)
         return [nib.affines.apply_affine(phys2vox, coords)]
 
-    def get_regions(self, coords, uncertainty_mm):
+    def assign_regions2points(self, coords, uncertainty_mm):
         """Assign subject voxel coordinates to regions in the Julich Brain Atlas.
 
         :param list coords: coordinates in subject's voxel space
@@ -452,30 +452,23 @@ class Logic:
         :return list, list, list, dict: source coordinates in RAS, target coordinates in RAS, assignments and urls to siibra-explorer
         :raise PointNotFoundError: if the given point is outside the brain
         """
-        # Import siibra related modules here to make use of preloading/caching.
-        import siibra
-        import siibra_explorer_toolsuite
-
         multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
 
-        sort_value = 'input containedness' if uncertainty_mm else 'map value'
+        sort_value = 'correlation' if uncertainty_mm else 'map value'
 
         # Transform from subject's voxel to subject's physical space.
-        source_coords_ras = self.vox2phys(coords)
+        source_coords_ras = self.warp_vox2phys(coords)
 
         if self.__img_type == 'unaligned':
-            maptype = 'statistical'
-            target_coords_ras = self.__phys2mni(source_coords_ras)
-        elif self.__img_type == 'aligned':
-            maptype='statistical'
-            target_coords_ras = source_coords_ras
+            target_coords_ras = self.__warp_phys2mni(source_coords_ras)
         else:
-            maptype='labelled'
             target_coords_ras = source_coords_ras
 
-        map = siibra.get_map(self.__parcellation, mni152, maptype=maptype)
-        target = siibra.Point(target_coords_ras[0], space=mni152, sigma_mm=uncertainty_mm)
+        map = siibra.get_map(self.__parcellation, mni152,
+                             maptype='statistical')
+        target = siibra.Point(
+            target_coords_ras[0], space=mni152, sigma_mm=uncertainty_mm)
 
         try:
             assignments = map.assign(target)
@@ -483,10 +476,54 @@ class Logic:
             raise PointNotFoundError('Point doesn\'t match MNI152 space.')
         results = assignments.sort_values(by=sort_value, ascending=False)
         # Remove all columns that are irrelevant or None.
-        results = results.drop(['input structure', 'centroid', 'volume', 'fragment'], axis=1)
+        results = results.drop(
+            ['input structure', 'centroid', 'volume', 'fragment'], axis=1)
         results = results.dropna(axis=1)
         urls = {}
         for region in results['region']:
-            urls[region.name] = 'atlases.ebrains.eu/viewer' # siibra_explorer_toolsuite.run(multilevel_human, mni152, self.__parcellation, region)
+            urls[region.name] = siibra_explorer_toolsuite.run(
+                multilevel_human, mni152, self.__parcellation, region)
 
         return source_coords_ras[0], target_coords_ras[0], results, urls
+
+    def get_features(self):
+
+        # TODO implement filtering reg. parcellation
+        self.__modalities = ['CellDensityProfile',
+                             'FunctionalConnectivity',
+                             'StreamlineCounts',
+                             'StreamlineLengths',
+                             'ReceptorDensityFingerprint',
+                             'ReceptorDensityProfile']
+
+        return self.__modalities
+
+    def get_receptors(self):
+        return siibra.vocabularies.RECEPTOR_SYMBOLS.keys()
+
+    def set_uncertainty(self, uncertainty):
+        self.__uncertainty = uncertainty
+
+    def export_assignments(self, filter, modalities, receptors, cohorts, output_file, progress_indicator):
+        from voluba_mriwarp.reports import AssignmentReport
+
+        report = AssignmentReport(parcellation=self.__parcellation,
+                                  force_overwrite=True, filter=filter, progress=progress_indicator)
+
+        if self.__img_type == 'unaligned':
+            coords = [siibra.Point(self.__warp_phys2mni([coord])[
+                                   0], space='mni152', sigma_mm=self.__uncertainty) for coord in self.__saved_points]
+        else:
+            coords = [siibra.Point(coord, space='mni152', sigma_mm=self.__uncertainty)
+                      for coord in self.__saved_points]
+
+        assignments = report.analyze(coords)
+        report.create_report(assignments,
+                             coords,
+                             self.__saved_points,
+                             [label.get() for label in self.__labels],
+                             self.__nifti_source,
+                             output_file,
+                             features=modalities,
+                             selected_receptors=receptors, cohorts=cohorts
+                             )

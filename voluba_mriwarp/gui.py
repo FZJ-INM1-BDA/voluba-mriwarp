@@ -11,12 +11,23 @@ from PIL import Image
 from PIL.ImageTk import PhotoImage
 from tkfontawesome import icon_to_image
 
-from voluba_mriwarp.canvas import View
 from voluba_mriwarp.config import *
 from voluba_mriwarp.exceptions import *
 from voluba_mriwarp.logic import Logic
+from voluba_mriwarp.viewer import Viewer
 from voluba_mriwarp.widgets import *
 
+
+# TODO review order of arguments (also in external functions!) --> for tkinter: geometry settings at the end? widget specific in front?
+# TODO review naming of arguments
+# TODO add docstrings
+# TODO add comments
+# TODO review docstrings (params, returns, raises, ...)
+# TODO review comments (Full sentences ending with fullstop)
+# TODO use point instead of coordinate/annotation everywhere
+# TODO review strings ("" vs '')
+# TODO review tkinter and siibra states (tk.DISABLED vs 'disabled')
+# TODO review naming of variables
 
 class App(tk.Tk):
     """GUI window"""
@@ -28,7 +39,7 @@ class App(tk.Tk):
         self.title(mriwarp_name)
         self.iconphoto(True, PhotoImage(Image.open(mriwarp_icon)))
         # When the window is closed on_closing is called.
-        self.protocol('WM_DELETE_WINDOW', self.on_closing)
+        self.protocol('WM_DELETE_WINDOW', self.close)
 
         self.__create_logic()
         self.__create_preload_window()
@@ -78,7 +89,7 @@ class App(tk.Tk):
     def __create_main_window(self):
         """Create the widgets for the main window."""
         self.resizable(True, True)
-        self.configure(bg=warp_bg)
+        self.configure(bg=viewer_bg)
 
         # Maximize the window.
         if platform.system() == 'Linux':
@@ -101,8 +112,8 @@ class App(tk.Tk):
             'times', fill='red', scale_to_width=15)
         self.__info_icon = icon_to_image(
             'info-circle', fill='white', scale_to_width=15)
-        self.__link_icon = icon_to_image(
-            'external-link-alt', fill=siibra_fg, scale_to_width=15)
+        self.__export_icon = icon_to_image(
+            'file-export', fill=siibra_fg, scale_to_width=18)
         self.__help_icon = icon_to_image(
             'question-circle', fill=siibra_fg, scale_to_width=20)
         self.__caret_right = icon_to_image(
@@ -120,7 +131,7 @@ class App(tk.Tk):
         """Create the frame for the NIfTI viewer."""
         # Update the window to get the real size of it.
         self.update()
-        self.__view_panel = tk.Frame(self, bg=warp_bg, height=self.winfo_height(
+        self.__view_panel = tk.Frame(self, bg=viewer_bg, height=self.winfo_height(
         ), width=self.winfo_width() - sidepanel_width)
         self.__view_panel.pack(side='right')
         self.__view_panel.pack_propagate(False)
@@ -135,7 +146,7 @@ class App(tk.Tk):
         self.__sidepanel.pack_propagate(False)
 
         # little hack to make following widgets expand to full width
-        f = tk.Frame(self.__sidepanel, bg=warp_bg, width=sidepanel_width)
+        f = tk.Frame(self.__sidepanel, bg=viewer_bg, width=sidepanel_width)
         f.grid(row=0, column=0, sticky='we')
         f.grid_propagate(False)
 
@@ -146,7 +157,7 @@ class App(tk.Tk):
 
         # menu chips for warping and region assignment
         self.__step = tk.IntVar()
-        self.__menu = tk.Frame(self.__sidepanel, bg=warp_bg)
+        self.__menu = tk.Frame(self.__sidepanel, bg=viewer_bg)
         self.__menu.grid(row=1, column=0, sticky='we')
         tk.Radiobutton(self.__menu, text='Warping', indicatoron=0, width=20, bg=siibra_bg, fg='white', selectcolor=siibra_highlight_bg,
                        bd=0, variable=self.__step, command=self.__show_warping_frame, value=0, font=font_10_b).grid(row=0, column=0, pady=(20, 0))
@@ -182,7 +193,7 @@ class App(tk.Tk):
             self.__open_file_path = tk.Entry(
                 self.__data_frame, bd=0, textvariable=input_file, width=57)
         self.__open_file_path.grid(column=1, row=0, pady=(20, 15))
-        tk.Button(self.__data_frame, bd=0, command=self.__select_file, text='...', padx=2.5).grid(
+        tk.Button(self.__data_frame, bd=0, command=self.__select_input, text='...', padx=2.5).grid(
             column=2, row=0, sticky='e', padx=(10, 15), pady=(20, 15))
 
         # widgets for choosing the output folder
@@ -199,7 +210,7 @@ class App(tk.Tk):
                 self.__data_frame, bd=0, textvariable=output_folder, width=57)
         self.__open_folder_path.insert(0, mriwarp_home)
         self.__open_folder_path.grid(column=1, row=1, pady=(0, 20))
-        tk.Button(self.__data_frame, bd=0, command=self.__select_folder, text='...', padx=2.5).grid(
+        tk.Button(self.__data_frame, bd=0, command=self.__select_output, text='...', padx=2.5).grid(
             column=2, row=1, sticky='e', padx=(10, 15), pady=(0, 20))
 
     def __create_warping_widgets(self):
@@ -209,7 +220,7 @@ class App(tk.Tk):
                                   highlightbackground=siibra_bg, highlightthickness=2)
         advanced_frame.pack(fill='x', padx=15, pady=(20, 0))
         # button to expand parameter file selection
-        self.__json_btn = tk.Button(advanced_frame, bd=0, command=self.__change_advanced, text=' Advanced settings ',
+        self.__json_btn = tk.Button(advanced_frame, bd=0, command=self.__change_advanced_settings_visibility, text=' Advanced settings ',
                                     padx=2.5, bg=siibra_highlight_bg, fg='white', image=self.__caret_right, compound='left', anchor='w')
         self.__json_btn.grid(column=0, row=0, sticky='w')
         # widgets for parameter file selection
@@ -227,7 +238,7 @@ class App(tk.Tk):
         self.__open_json_path.insert(
             0, os.path.join(parameter_home, 'default.json'))
         self.__open_json_path.grid(column=1, row=1, padx=10)
-        tk.Button(self.__param_frame, bd=0, command=self.__select_json, text='...',
+        tk.Button(self.__param_frame, bd=0, command=self.__select_parameters, text='...',
                   padx=2.5).grid(column=2, row=1, sticky='e')
         self.__param_frame.grid_remove()
         self.__json_showing = False
@@ -258,9 +269,9 @@ class App(tk.Tk):
                         foreground='white')
         self.__mni = tk.BooleanVar(value=0)
         ttk.Radiobutton(mni_frame, text='no', variable=self.__mni, value=0,
-                        command=self.__set_mni).grid(column=1, row=0, sticky='w', padx=10)
+                        command=self.__set_already_mni).grid(column=1, row=0, sticky='w', padx=10)
         ttk.Radiobutton(mni_frame, text='yes', variable=self.__mni,
-                        value=1, command=self.__set_mni).grid(column=2, row=0, sticky='w')
+                        value=1, command=self.__set_already_mni).grid(column=2, row=0, sticky='w')
 
         # widgets for the parcellation selection
         parcellation_frame = tk.Frame(
@@ -280,7 +291,7 @@ class App(tk.Tk):
         uncertainty_frame.pack(fill='x', padx=15)
         tk.Label(uncertainty_frame, bg=siibra_highlight_bg, fg='white', justify='left', anchor='w',
                  text='Point uncertainty:', width=15).grid(row=0, column=0, sticky='w')
-        vcmd = (self.register(self.__validate_uncertainty), '%P')
+        vcmd = (self.register(self.__validate_float), '%P')
         self.__uncertainty = tk.Spinbox(uncertainty_frame, from_=0, to=100, validate='key', validatecommand=vcmd,
                                         increment=0.1, format='%.2f', width=5)
         self.__uncertainty.grid(row=0, column=1, sticky='w', padx=10)
@@ -292,7 +303,7 @@ class App(tk.Tk):
                                   highlightbackground=siibra_bg, highlightthickness=2)
         advanced_frame.pack(fill='x', padx=15, pady=(15, 20))
         # button to expand parameter file selection
-        self.__transform_btn = tk.Button(advanced_frame, bd=0, command=self.__change_advanced_transform, text=' Advanced settings ',
+        self.__transform_btn = tk.Button(advanced_frame, bd=0, command=self.__change_advanced_transform_visibility, text=' Advanced settings ',
                                          padx=2.5, bg=siibra_highlight_bg, fg='white', image=self.__caret_right, compound='left', anchor='w')
         self.__transform_btn.grid(column=0, row=0, sticky='w')
         # widgets for parameter file selection
@@ -320,8 +331,14 @@ class App(tk.Tk):
         tk.Frame(self.__assignment_frame, bg=siibra_bg,
                  height=10).pack(fill='x')
 
-        tk.Label(self.__assignment_frame, bg=siibra_highlight_bg, fg='white', font=font_10,
-                 justify='left', anchor='w', text='Selected points').pack(pady=(20, 10))
+        frame = tk.Frame(self.__assignment_frame, bg=siibra_highlight_bg)
+        frame.pack(pady=(20, 10), padx=10, fill='x')
+        tk.Label(frame, bg=siibra_highlight_bg, fg='white', font=font_10,
+                 justify='left', anchor='w', text='Coordinates').pack(side='left')
+
+        self.__export_btn = tk.Button(frame, bg=siibra_highlight_bg, fg='white', image=self.__export_icon,
+                                      relief='flat', justify='right', anchor='e', command=self.__export_assignments, state=tk.DISABLED)
+        self.__export_btn.pack(padx=10, side='left')
 
         self.update()
         remaining_height = (self.winfo_height()-self.__data_frame.winfo_height() -
@@ -347,13 +364,6 @@ class App(tk.Tk):
         point_scrollbar.pack(side='right', fill='y')
 
         # table header
-        # TODO add colorpicker (https://www.pythontutorial.net/tkinter/tkinter-color-chooser/)
-        # colors are set for banner of region assignment and for point in viewer (draw and __annotate)
-        # __annotate is set with double click --> would need to fetch color from color widget of first row in point dialog
-        # draw is called when current 'eye button' is clicked --> would need to fetch color from color widget of corresponding row in point dialog
-        # also call draw when color changes for saved point? --> only if slice and point is showing
-        # need to save color for each saved point
-        # TODO permanently show all points? --> eye button would make sense to hide/show points --> change "show regions" to brain icon or smth
         columns = ['Label', 'R', 'A', 'S', 'Show regions']
         for i, column_text in enumerate(columns):
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
@@ -362,15 +372,19 @@ class App(tk.Tk):
         # add point (manually or by clicking)
         label = tk.StringVar()
         self.__R, self.__A, self.__S = tk.DoubleVar(), tk.DoubleVar(), tk.DoubleVar()
+        vcmd = (self.register(self.__validate_float), '%P')
         widgets = [
             tk.Entry(self.__point_frame, width=10, textvariable=label),
-            tk.Entry(self.__point_frame, textvariable=self.__R, width=10),
-            tk.Entry(self.__point_frame, textvariable=self.__A, width=10),
-            tk.Entry(self.__point_frame, textvariable=self.__S, width=10),
+            tk.Entry(self.__point_frame, textvariable=self.__R,
+                     width=10, validate='key', validatecommand=vcmd),
+            tk.Entry(self.__point_frame, textvariable=self.__A,
+                     width=10, validate='key', validatecommand=vcmd),
+            tk.Entry(self.__point_frame, textvariable=self.__S,
+                     width=10, validate='key', validatecommand=vcmd),
             tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove',
-                      command=lambda: self.__reload_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
+                      command=lambda: self.__redo_assignment((self.__R.get(), self.__A.get(), self.__S.get()))),
             tk.Button(self.__point_frame, image=self.__save_icon, command=lambda: self.__save_point(
-                (self.__R.get(), self.__A.get(), self.__S.get()), label=label.get()))
+                (self.__R.get(), self.__A.get(), self.__S.get()), label))
         ]
         for i, widget in enumerate(widgets):
             widget.grid(row=2, column=i, sticky='nswe',
@@ -385,13 +399,12 @@ class App(tk.Tk):
             self.__assignment_frame, bg=siibra_highlight_bg)
         self.__region_frame.pack(fill='both', expand=True)
 
-    def __validate_uncertainty(self, value):
-        """Validate if the entered uncertainty is a numerical value."""
+    def __validate_float(self, value):
+        """Validate if the entered value is a numerical value."""
         try:
             float(value)
             return True
         except:
-            self.bell()
             return False
 
     def __show_warping_frame(self):
@@ -404,7 +417,7 @@ class App(tk.Tk):
         self.__warping_frame.grid_remove()
         self.__assignment_frame.grid()
 
-    def __change_advanced(self):
+    def __change_advanced_settings_visibility(self):
         """Show/Hide selection for parameter JSON."""
         if self.__json_showing:
             self.__json_btn.config(image=self.__caret_right)
@@ -415,7 +428,7 @@ class App(tk.Tk):
             self.__param_frame.grid()
             self.__json_showing = True
 
-    def __change_advanced_transform(self):
+    def __change_advanced_transform_visibility(self):
         """Show/Hide selection for transformation file."""
         if self.__transform_showing:
             self.__transform_btn.config(image=self.__caret_right)
@@ -426,17 +439,17 @@ class App(tk.Tk):
             self.__transform_frame.grid()
             self.__transform_showing = True
 
-    def __set_mni(self):
+    def __set_already_mni(self):
         """Retry the region assignment for the currently selected point if the image type changes."""
         if self.__mni.get() == 1:
             self.__transform_showing = True
-            self.__change_advanced_transform()
+            self.__change_advanced_transform_visibility()
             self.__transform_btn.configure(state=tk.DISABLED)
         else:
             self.__transform_btn.configure(state=tk.NORMAL)
 
         if self.__annotation != [-1, -1, -1]:
-            self.set_annotation()
+            self.assign_regions2point()
 
     def __create_viewer(self):
         """Create the viewer for the input NIfTI."""
@@ -445,15 +458,15 @@ class App(tk.Tk):
         coronal_slice = round(image.shape[1] / 2) + 1
 
         # View needs to be initialized before slider as slider.set updates the viewer.
-        self.__coronal_view = View(
+        self.__coronal_view = Viewer(
             self.__view_panel, data=image[:, coronal_slice, :], slice=coronal_slice, side='bottom', padx=10, pady=10)
 
         # help icon
-        tk.Button(self.__view_panel, bg=warp_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
+        tk.Button(self.__view_panel, bg=viewer_bg, bd=0, highlightthickness=0, image=self.__help_icon, command=lambda: webbrowser.open(
             'https://voluba-mriwarp.readthedocs.io')).pack(anchor='e', side='right', padx=20, pady=(20, 0))
 
         # widget for changing the displayed slice
-        self.__coronal_slider = tk.Scale(self.__view_panel, bg=warp_bg, fg='white', command=lambda value: self.__update_coronal(
+        self.__coronal_slider = tk.Scale(self.__view_panel, bg=viewer_bg, fg='white', command=lambda value: self.__update_viewer(
             value), from_=1, highlightthickness=0, length=sidepanel_width - 100, orient=tk.HORIZONTAL, showvalue=True, sliderrelief=tk.FLAT, to=image.shape[1], )
         self.__coronal_slider.set(coronal_slice)
         self.__coronal_slider.pack(padx=10, pady=10)
@@ -461,12 +474,6 @@ class App(tk.Tk):
         # Remove previous region assignments.
         for widget in self.__region_frame.winfo_children():
             widget.destroy()
-
-        # widget for info on how to select regions
-        label = tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, compound='left', fg='white', padx=15, pady=20,
-                         font=font_10, image=self.__info_icon, text='Double click a location in the viewer to assign a brain region.')
-        label.image = self.__info_icon
-        label.pack(fill='x')
 
         # Remove previously saved points.
         self.__R.set(0)
@@ -477,6 +484,7 @@ class App(tk.Tk):
             for widget in row:
                 widget.destroy()
         self.__point_widgets = []
+        self.__export_btn.configure(state=tk.DISABLED)
 
         self.update()
         # Move the input NIfTI to the center of the viewer.
@@ -501,7 +509,7 @@ class App(tk.Tk):
 
             self.__create_viewer()
             self.__mni.set(0)
-            self.__set_mni()
+            self.__set_already_mni()
 
     def __track_output(self, variable):
         """Observe the Entry widget for the path to the output folder.
@@ -513,7 +521,7 @@ class App(tk.Tk):
             self.logic.set_out_path(path)
             # Retry the region assignment for the currently selected point if the output folder changes.
             if self.__annotation != [-1, -1, -1]:
-                self.set_annotation()
+                self.assign_regions2point()
 
     def __track_transform(self, variable):
         """Observe the Entry widget for the path to the transformation file.
@@ -524,9 +532,9 @@ class App(tk.Tk):
         if self.logic.check_transform_path(path):
             # Retry the region assignment for the currently selected point if the transformation file changes.
             if self.__annotation != [-1, -1, -1]:
-                self.set_annotation()
+                self.assign_regions2point()
 
-    def __select_json(self):
+    def __select_parameters(self):
         """Select a parameter JSON."""
         # Open the latest given valid folder in the filedialog.
         folder = '/'
@@ -558,7 +566,7 @@ class App(tk.Tk):
             filename = os.path.normpath(filename)
         self.__open_transform_path.insert(0, filename)
 
-    def __select_file(self):
+    def __select_input(self):
         """Select an input NIfTI."""
         # Open the latest given valid folder in the filedialog.
         folder = '/'
@@ -574,7 +582,7 @@ class App(tk.Tk):
             filename = os.path.normpath(filename)
         self.__open_file_path.insert(0, filename)
 
-    def __select_folder(self):
+    def __select_output(self):
         """Select an output folder."""
         # Open the latest given valid folder in the filedialog.
         foldername = filedialog.askdirectory(
@@ -591,7 +599,7 @@ class App(tk.Tk):
         try:
             self.logic.set_in_path(self.__open_file_path.get())
             self.logic.set_out_path(self.__open_folder_path.get())
-            self.logic.set_json_path(self.__open_json_path.get())
+            self.logic.set_parameters_path(self.__open_json_path.get())
         except Exception as e:
             logging.getLogger(mriwarp_name).error(
                 f'Error during path definition: {str(e)}')
@@ -642,7 +650,7 @@ class App(tk.Tk):
                        anchor='w', fg='white', text='Registration to MNI152 ... ')
         reg.pack(padx=10, pady=5, anchor='w')
         try:
-            self.logic.register()
+            self.logic.warp()
         except Exception as e:
             reg.configure(image=self.__error_icon, compound='right')
             self.__show_error('registration', e)
@@ -658,7 +666,7 @@ class App(tk.Tk):
 
         # Retry the region assignment for the currently selected point when warping finishes.
         if self.__annotation != [-1, -1, -1]:
-            self.set_annotation()
+            self.assign_regions2point()
 
     def __show_error(self, stage, error):
         """Stop the warping and show the error that occurred.
@@ -674,7 +682,7 @@ class App(tk.Tk):
                              f'The following error occurred during {stage}:\n\n{str(error)}\n\n'
                              f'If you need help, please contact support@ebrains.eu.')
 
-    def __update_coronal(self, value):
+    def __update_viewer(self, value):
         """Update the shown slice in the viewer.
 
         :param int value: slice of the input NIfTI to display
@@ -682,7 +690,7 @@ class App(tk.Tk):
         self.__coronal_view.update_data(self.logic.get_numpy_source()[
                                         :, int(value) - 1, :], int(value) - 1)
 
-    def set_annotation(self):
+    def assign_regions2point(self):
         """Set the annotation and start the region assignment."""
         # If the user specifies a new transformation file, it is used instead of the default file.
         transform_path = self.__open_transform_path.get()
@@ -698,7 +706,7 @@ class App(tk.Tk):
                              self.logic.get_numpy_source().shape[0] - self.__annotation[2]]
 
         # set manual points to coords
-        source_coords_ras = self.logic.vox2phys(self.__annotation)[0]
+        source_coords_ras = self.logic.warp_vox2phys(self.__annotation)[0]
         self.__R.set(source_coords_ras[0])
         self.__A.set(source_coords_ras[1])
         self.__S.set(source_coords_ras[2])
@@ -711,7 +719,7 @@ class App(tk.Tk):
             threading.Thread(target=self.__create_assignment,
                              daemon=True).start()
         else:  # No transformation matrix can be found.
-            self.__create_annotation(source_coords_ras)
+            self.__create_point_info(source_coords_ras)
 
             path = self.__open_transform_path.get().rstrip()
             if path == '':
@@ -724,7 +732,7 @@ class App(tk.Tk):
                      f'If you need help, visit voluba-mriwarp.readthedocs.io.',
                      wraplength=sidepanel_width - 80).pack(fill='x', padx=5, pady=10)
 
-    def __create_annotation(self, coords):
+    def __create_point_info(self, coords):
         """Create widgets to display the selected annotation.
 
         :param list coords: annotation in physical space
@@ -751,17 +759,21 @@ class App(tk.Tk):
         for widget in widgets:
             widget.destroy()
 
-    def __save_point(self, point, label=''):
+        if self.logic.get_num_points() == 0:
+            self.__export_btn.configure(state=tk.DISABLED)
+
+    def __save_point(self, point, label):
         """Save a point and add its corresponding widgets.
 
         :param tuple point: point to save
         """
-        self.logic.save_point(point)
+        new_label = tk.StringVar()
+        self.logic.save_point(point, new_label)
         idx = self.logic.get_num_points()
+        new_label.set(label.get() if label.get().rstrip() else idx)
 
         widgets = [
-            tk.Entry(self.__point_frame, width=10, textvariable=tk.StringVar(
-                value=label if label.rstrip() else idx)),
+            tk.Entry(self.__point_frame, width=10, textvariable=new_label),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
                 value=point[0]), width=10, state='readonly'),
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
@@ -769,7 +781,7 @@ class App(tk.Tk):
             tk.Entry(self.__point_frame, textvariable=tk.StringVar(
                 value=point[2]), width=10, state='readonly'),
             tk.Button(self.__point_frame, image=self.__eye_icon, relief='groove',
-                      command=lambda: self.__reload_assignment(point)),
+                      command=lambda: self.__redo_assignment(point)),
             tk.Button(self.__point_frame, image=self.__trash_icon,
                       command=lambda: self.__remove_point(point))
         ]
@@ -778,22 +790,10 @@ class App(tk.Tk):
                         padx=5*(i == len(widgets)-1))
         self.__point_widgets.append(widgets)
 
-        #############################################
-        # TODO: everything below depends on what is needed for PDF report creation --> discuss with Louisa
-        # Do we want to show the subject's brain with points? -> Point in subject + filename
-        # What is definitely needed per point: Point in MNI --> is already part of assigned regions, assignments, parcellation, modality
+        self.__export_btn.configure(state=tk.NORMAL)
 
-        # TODO save parcellation, filename, etc.?
-        # --> save filename, point in subject, point in mni, parcellation and assigned regions --> less computation time, but more memory
-        # --> only save filename, point, parcellation --> less memory, more computation time
-
-        # TODO Before export:
-        # 1. Let user choose which regions to export for selected points --> Idea: display assignment in table with checkmarks for export
-        # 2. Let user choose which features to show for selected regions
-        # [x] connectivity (StreamlineCounts/StreamlineLengths/FunctionalConnectivity?) [x] cell densities (Profile?) [x] receptor densities (Profile/Fingerprint?)
-
-    def __reload_assignment(self, point):
-        x, slice, y = self.logic.phys2vox(point)[0]
+    def __redo_assignment(self, point):
+        x, slice, y = self.logic.warp_phys2vox(point)[0]
         # The origin in the viewer is upper left but the image origin is lower left.
         y = self.logic.get_numpy_source().shape[0] - y
         self.__coronal_slider.set(slice+1)  # The slider starts at 1.
@@ -801,7 +801,7 @@ class App(tk.Tk):
         # redraw annotation on canvas
         self.__coronal_view.draw_annotation(x, slice, y)
 
-    def __animate(self):
+    def __show_wip(self):
         """Show three animated dots to indicate running region assignment."""
         dots = tk.StringVar()
         dots.set('.')
@@ -821,11 +821,11 @@ class App(tk.Tk):
         """Create widgets displaying the regions assigned to the selected annotation."""
         # Indicate that the assignment is running.
         self.__calculating = True
-        threading.Thread(target=self.__animate, daemon=True).start()
+        threading.Thread(target=self.__show_wip, daemon=True).start()
 
         # Assign regions.
         try:
-            source, target, results, urls = self.logic.get_regions(
+            source, target, results, urls = self.logic.assign_regions2points(
                 self.__annotation, float(self.__uncertainty.get()))
         except SubprocessFailedError as e:
             logging.getLogger(mriwarp_name).error(
@@ -840,16 +840,16 @@ class App(tk.Tk):
             return
         except PointNotFoundError:
             logging.getLogger(mriwarp_name).error(
-                f'{self.__annotation} outside MNI152 space.')
+                f'Point {self.__annotation} [vox] is outside MNI152 space.')
             # The point is outside the brain.
             tk.Label(self.__region_frame, anchor='w', bg='red', borderwidth=10, fg='black',
-                     font=font_10_b, text='Point outside MNI152 space').pack(fill='x')
+                     font=font_10_b, text=f'The selected point is outside MNI152 space.').pack(fill='x')
             self.__calculating = False
             return
 
         self.__calculating = False
 
-        self.__create_annotation(source)
+        self.__create_point_info(source)
 
         # widget for the corresponding point in MNI152 space
         tk.Label(self.__region_frame, anchor='w', bg=siibra_highlight_bg, fg=siibra_fg, justify='left', padx=5,
@@ -883,7 +883,6 @@ class App(tk.Tk):
             region_frame.pack(fill='both', expand=True)
             region_frame.pack_propagate(False)
 
-            # TODO adjust: coloring --> seems to be more complicated than it should be ...
             style = ttk.Style()
             style.configure('Treeview.Heading', font=font_10_b)
             columns = results.columns.values.tolist()
@@ -928,7 +927,14 @@ class App(tk.Tk):
                 widget.destroy()
             self.__create_assignment()
 
-    def on_closing(self):
+    def close(self):
         """Destroy the main window after asking for quit."""
         if messagebox.askokcancel('Quit', 'Do you really want to quit?', parent=self):
             self.destroy()
+
+    def __export_assignments(self):
+        type = 'template' if self.logic.get_in_path(
+        ) == mni_template else 'aligned' if self.__mni.get() == 1 else 'unaligned'
+        self.logic.set_img_type(type)
+        self.logic.set_uncertainty(float(self.__uncertainty.get()))
+        ExportDialog(self, title='Export', logic=self.logic)

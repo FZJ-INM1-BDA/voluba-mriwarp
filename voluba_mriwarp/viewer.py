@@ -16,7 +16,7 @@ class CanvasImage:
     """
 
     def __init__(self, placeholder, data, slice):
-        """Initialize the canvas"""
+        """Initialize the canvas."""
         self.zoom = 1.0
         # zoom magnitude
         self.__delta = 1.3
@@ -30,7 +30,7 @@ class CanvasImage:
         self.__image_frame = ttk.Frame(placeholder)
 
         self.canvas = tk.Canvas(
-            self.__image_frame, highlightthickness=0, background=warp_bg)
+            self.__image_frame, highlightthickness=0, background=viewer_bg)
         self.canvas.grid(row=0, column=0, sticky='nswe')
         self.canvas.update()
 
@@ -175,7 +175,7 @@ class CanvasImage:
         self.canvas.delete('annotation')
         self.canvas.create_oval(x - 3, y - 3, x + 3,
                                 y + 3, width=0, fill='gold', tags='annotation')
-        self.__image_frame.master.master.set_annotation()
+        self.__image_frame.master.master.assign_regions2point()
 
     def __annotate(self, event):
         """Annotate a point on the canvas."""
@@ -189,9 +189,9 @@ class CanvasImage:
         x = (x - bbox[0]) / self.zoom
         y = (y - bbox[1]) / self.zoom
         self.__annotation = [x, self.__slice, y]
-        self.__image_frame.master.master.set_annotation()
+        self.__image_frame.master.master.assign_regions2point()
 
-    def outside(self, x, y):
+    def check_outside(self, x, y):
         """Check if the point (x,y) is outside the image area.
 
         :param float x: x coordinate of the point
@@ -209,7 +209,7 @@ class CanvasImage:
         x = self.canvas.canvasx(event.x)
         y = self.canvas.canvasy(event.y)
 
-        if self.outside(x, y):
+        if self.check_outside(x, y):
             return
 
         scale = 1.0
@@ -305,7 +305,7 @@ class CanvasImage:
         self.__image_frame.destroy()
 
 
-class View(ttk.Frame):
+class Viewer(ttk.Frame):
     """Viewer displaying the input NIfTI"""
 
     def __init__(self, mainframe, data, slice, side, padx, pady):
