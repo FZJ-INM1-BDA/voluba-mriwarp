@@ -365,11 +365,11 @@ class App(tk.Tk):
         label.grid(column=0, row=1, sticky='w')
         if platform.system() == 'Linux':
             self.__open_transform_path = tk.Entry(
-                self.__transform_frame, textvariable=transform_file, 
+                self.__transform_frame, textvariable=transform_file,
                 bd=0, width=35)
         else:
             self.__open_transform_path = tk.Entry(
-                self.__transform_frame, textvariable=transform_file, 
+                self.__transform_frame, textvariable=transform_file,
                 bd=0, width=53)
         self.__open_transform_path.grid(column=1, row=1, padx=10)
         button = tk.Button(self.__transform_frame, text='...',
@@ -604,7 +604,7 @@ class App(tk.Tk):
         path = variable.get()
         if self.logic.check_out_path(path):
             self.logic.set_out_path(path)
-            # Retry the region assignment for the currently selected point if 
+            # Retry the region assignment for the currently selected point if
             # the output folder changes.
             if self.__annotation != (-1, -1, -1):
                 self.assign_regions2point()
@@ -617,7 +617,7 @@ class App(tk.Tk):
         """
         path = variable.get()
         if self.logic.check_transform_path(path):
-            # Retry the region assignment for the currently selected point if 
+            # Retry the region assignment for the currently selected point if
             # the transformation file changes.
             if self.__annotation != (-1, -1, -1):
                 self.assign_regions2point()
@@ -791,7 +791,7 @@ class App(tk.Tk):
         label.pack(anchor='w', padx=10, pady=(5, 20))
         self.__warp_button.configure(state='normal')
 
-        # Retry the region assignment for the currently selected point when 
+        # Retry the region assignment for the currently selected point when
         # warping finishes.
         if self.__annotation != (-1, -1, -1):
             self.assign_regions2point()
@@ -850,7 +850,7 @@ class App(tk.Tk):
 
     def assign_regions2point(self):
         """Set the annotation and start the region assignment."""
-        # If the user specifies a new transformation file, it is used instead 
+        # If the user specifies a new transformation file, it is used instead
         # of the default file.
         transform_path = self.__open_transform_path.get()
         if transform_path:
@@ -860,7 +860,7 @@ class App(tk.Tk):
         ) == mni_template else 'aligned' if self.__mni.get() == 1 else 'unaligned'
         self.logic.set_img_type(type)
         self.__annotation = self.__coronal_viewer.get_annotation()
-        # The origin in the viewer is upper left but the image origin is lower 
+        # The origin in the viewer is upper left but the image origin is lower
         # left.
         self.__annotation = (
             self.__annotation[0],
@@ -911,7 +911,7 @@ class App(tk.Tk):
         # widget for the annotated point in physical space
         label = tk.Label(
             self.__region_frame, text=f'Point {tuple(point)} [mm]',
-            font=font_12_b, justify='left', bg='gold', fg=siibra_bg, 
+            font=font_12_b, justify='left', bg='gold', fg=siibra_bg,
             anchor='w', padx=10, pady=10)
         label.pack(fill='x', expand=True)
 
@@ -1054,7 +1054,7 @@ class App(tk.Tk):
         :param tuple point: point to assign regions to
         """
         x, slice, y = self.logic.warp_phys2vox(point)
-        # The origin in the viewer is upper left but the image origin is lower 
+        # The origin in the viewer is upper left but the image origin is lower
         # left.
         y = self.logic.get_numpy_source().shape[0] - y
         self.__coronal_slider.set(slice+1)  # The slider starts at 1.
