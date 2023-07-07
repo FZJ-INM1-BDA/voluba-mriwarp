@@ -11,7 +11,7 @@ class Logger():
 
     def __init__(self, logger, level):
         """Initialize the stream.
-        
+
         :param logging.Logger logger: logger to write to
         :param int level: logging level
         """
@@ -20,7 +20,7 @@ class Logger():
 
     def write(self, text):
         """Redirect a write to the logger.
-        
+
         :param str text: text to log
         """
         for line in text.rstrip().splitlines():
@@ -35,12 +35,9 @@ def setup_logger():
     # Write the log to a temporary file.
     tmp_file = os.path.join(tempfile.gettempdir(), f'{mriwarp_name}.log')
     logging.basicConfig(
-        filename=tmp_file,
-        filemode='w',
+        filename=tmp_file, filemode='w',
         format='[%(name)s:%(levelname)s] %(asctime)s %(message)s',
-        datefmt='%d/%m/%Y %H:%M:%S',
-        level=logging.DEBUG
-    )
+        datefmt='%d/%m/%Y %H:%M:%S', level=logging.DEBUG)
     logger = logging.getLogger(mriwarp_name)
     # Redirect the stream to capture the output of HD_BET and other modules.
     sys.stdout = Logger(logger, logging.INFO)
