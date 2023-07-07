@@ -13,7 +13,7 @@ import siibra_explorer_toolsuite
 from HD_BET.run import run_hd_bet
 from HD_BET.utils import maybe_download_parameters
 
-from voluba_mriwarp.config import mni_template, mriwarp_name
+from voluba_mriwarp.config import *
 from voluba_mriwarp.exceptions import *
 
 
@@ -38,18 +38,33 @@ class Logic:
         """Preload HD_BET parameters, siibra and its components to speed up 
         region assignment.
         """
+        # Create result directory.
+        if not os.path.exists(mriwarp_home):
+            os.mkdir(mriwarp_home)
+
+        # Copy warping parameters.
+        if not os.path.exists(parameter_home):
+            parameter_source = os.path.normpath('./data/parameters')
+            if platform.system() == 'Linux':
+                os.system(f'cp -r {parameter_source} {mriwarp_home}')
+            else:
+                os.system(f'xcopy {parameter_source} {parameter_home} /i')
+        
+        # Download HD-BET parameters.
         maybe_download_parameters(0)
 
+        # Get all parcellations available for MNI152 space.
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
-
+        
         pmaps = siibra.maps.dataframe
         mni_pmaps = pmaps[(pmaps.maptype == "STATISTICAL")
                           & (pmaps.space == mni152.name)]
         self.__mni152_parcellations = [parcellation
                                        for parcellation in
                                        mni_pmaps.parcellation]
-        # Remove duplicate Julich-Brain 3.0
+        # Remove duplicate Julich-Brain 3.0.
         self.__mni152_parcellations = list(dict.fromkeys(self.__mni152_parcellations))
+        
         self.set_parcellation('julich 3.0')
 
     def set_in_path(self, in_path):

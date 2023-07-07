@@ -63,12 +63,6 @@ class App(tk.Tk):
         """Create the instances for the logical backend."""
         self.logic = Logic()
         self.logic.set_in_path(mni_template)
-
-        if not os.path.exists(mriwarp_home):
-            os.mkdir(mriwarp_home)
-        # TODO json files need to be copied from somewhere!
-        if not os.path.exists(parameter_home):
-            os.mkdir(parameter_home)
         self.logic.set_out_path(mriwarp_home)
         self.__annotation = (-1, -1, -1)
 
