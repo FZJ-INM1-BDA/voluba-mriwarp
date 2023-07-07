@@ -276,7 +276,7 @@ class ImageCanvas:
         x = (x - bbox[0]) / self.zoom
         y = (y - bbox[1]) / self.zoom
         self.__annotation = (x, self.__slice, y)
-        self.__image_frame.master.master.assign_regions2point()
+        self.__image_frame.master.master.assign_regions2point(self.__annotation)
 
     def draw(self, x, slice, y):
         """Draw a point on the canvas.
@@ -296,7 +296,6 @@ class ImageCanvas:
         self.canvas.delete('annotation')
         self.canvas.create_oval(
             x - 3, y - 3, x + 3, y + 3, width=0, fill='gold', tags='annotation')
-        self.__image_frame.master.master.assign_regions2point()
 
     def update(self, image, slice):
         """Update the displayed image to the specified slice.

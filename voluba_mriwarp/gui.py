@@ -434,7 +434,8 @@ class App(tk.Tk):
         self.__point_widgets = []
         # add point (manually or by clicking)
         label = tk.StringVar()
-        self.__R, self.__A, self.__S = tk.DoubleVar(), tk.DoubleVar(), tk.DoubleVar()
+        # Not using DoubleVar here because it does rounding.
+        self.__R, self.__A, self.__S = tk.StringVar(), tk.StringVar(), tk.StringVar()
         vcmd = (self.register(self.__validate_float), '%P')
         widgets = [
             tk.Entry(self.__point_frame, textvariable=label, width=10),
@@ -450,15 +451,15 @@ class App(tk.Tk):
             tk.Button(
                 self.__point_frame, image=self.__brain_icon, relief='groove',
                 command=lambda: self.__redo_assignment(
-                    (self.__R.get(),
-                     self.__A.get(),
-                     self.__S.get()))),
+                    (float(self.__R.get()),
+                     float(self.__A.get()),
+                     float(self.__S.get())))),
             tk.Button(
                 self.__point_frame, image=self.__save_icon,
                 command=lambda: self.__save_point(
-                    (self.__R.get(),
-                     self.__A.get(),
-                     self.__S.get()),
+                    (float(self.__R.get()),
+                     float(self.__A.get()),
+                     float(self.__S.get())),
                     label))]
         for i, widget in enumerate(widgets):
             widget.grid(column=i, row=2, sticky='nswe',
@@ -508,9 +509,9 @@ class App(tk.Tk):
             widget.destroy()
 
         # Remove previously saved points.
-        self.__R.set(0)
-        self.__A.set(0)
-        self.__S.set(0)
+        self.__R.set('')
+        self.__A.set('')
+        self.__S.set('')
         self.logic.delete_points()
         for row in self.__point_widgets:
             for widget in row:
@@ -540,6 +541,10 @@ class App(tk.Tk):
             float(value)
             return True
         except:
+            # Empty strings and negative sign need to be accepted to enable
+            # overwrite.
+            if value in ['', '-']:
+                return True
             return False
 
     def __show_warping_frame(self):
@@ -848,7 +853,7 @@ class App(tk.Tk):
         if self.logic.get_num_points() == 0:
             self.__export_button.configure(state='disabled')
 
-    def assign_regions2point(self):
+    def assign_regions2point(self, point):
         """Set the annotation and start the region assignment."""
         # If the user specifies a new transformation file, it is used instead
         # of the default file.
@@ -859,7 +864,7 @@ class App(tk.Tk):
         type = 'template' if self.logic.get_in_path(
         ) == mni_template else 'aligned' if self.__mni.get() == 1 else 'unaligned'
         self.logic.set_img_type(type)
-        self.__annotation = self.__coronal_viewer.get_annotation()
+        self.__annotation = point
         # The origin in the viewer is upper left but the image origin is lower
         # left.
         self.__annotation = (
@@ -1057,10 +1062,9 @@ class App(tk.Tk):
         # The origin in the viewer is upper left but the image origin is lower
         # left.
         y = self.logic.get_numpy_source().shape[0] - y
-        self.__coronal_slider.set(slice+1)  # The slider starts at 1.
-
-        # redraw annotation on canvas
-        self.__coronal_viewer.draw_annotation(x, slice, y)
+        self.__coronal_slider.set(round(slice)+1)  # The slider starts at 1.
+        self.__coronal_viewer.draw_annotation(x, round(slice), y)
+        self.assign_regions2point((x, slice, y))
 
     def __show_wip(self):
         """Show three animated dots to indicate running region assignment."""
