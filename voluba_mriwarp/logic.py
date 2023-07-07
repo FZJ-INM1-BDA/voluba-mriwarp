@@ -40,15 +40,16 @@ class Logic:
         """
         maybe_download_parameters(0)
 
-        multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
 
-        self.__mni152_parcellations = []
-        for parcellation in multilevel_human.parcellations:
-            pmap = siibra.get_map(parcellation, mni152, maptype='statistical')
-            if parcellation.supports_space(mni152) and pmap:
-                self.__mni152_parcellations.append(parcellation.shortname)
-
+        pmaps = siibra.maps.dataframe
+        mni_pmaps = pmaps[(pmaps.maptype == "STATISTICAL")
+                          & (pmaps.space == mni152.name)]
+        self.__mni152_parcellations = [parcellation
+                                       for parcellation in
+                                       mni_pmaps.parcellation]
+        # Remove duplicate Julich-Brain 3.0
+        self.__mni152_parcellations = list(dict.fromkeys(self.__mni152_parcellations))
         self.set_parcellation('julich 3.0')
 
     def set_in_path(self, in_path):
@@ -167,12 +168,11 @@ class Logic:
 
         :param str parcellation: name of the parcellation to use
         """
-        multilevel_human = siibra.atlases.MULTILEVEL_HUMAN_ATLAS
-        self.__parcellation = multilevel_human.get_parcellation(parcellation)
+        self.__parcellation = siibra.parcellations[parcellation]
 
     def get_parcellation(self):
         """Return the current parcellation that is used for region assignment."""
-        return self.__parcellation.shortname
+        return self.__parcellation
 
     def get_parcellations(self):
         """Return all available parcellations for ICBM MNI152 2009c nonlinear 
