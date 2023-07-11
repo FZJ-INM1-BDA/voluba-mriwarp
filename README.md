@@ -1,3 +1,11 @@
+> **A new release of voluba-mriwarp is planned until 14.07.2023 including the following features:**  
+    - specify your own warping parameters  
+    - choose between different parcellations  
+    - specify a point uncertainty  
+    - select and save multiple points  
+    - export assignments together with linked features into a PDF report
+
+
 # voluba-mriwarp
 
 > **Note: _voluba-mriwarp_ is still in development. You may still encounter bugs when using it.**
