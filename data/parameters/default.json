@@ -1,0 +1,37 @@
+{
+    "command": {
+        "verbose": "1",
+        "dimensionality": "3",
+        "use-histogram-matching": "0",
+        "winsorize-image-intensities": "[0.005,0.995]",
+        "masks": "[NULL,MASK]",
+        "float": "1",
+        "interpolation": "Linear",
+        "output": "[TRANSFORM,VOLUME]",
+        "write-composite-transform": "1",
+        "collapse-output-transforms": "1",
+        "stages": [
+            {
+                "transform": "Rigid[0.1]",
+                "metric": "MI[FIXED,MOVING,1,32,Regular,0.25]",
+                "convergence": "[1000x500x250x0,1e-6,10]",
+                "smoothing-sigmas": "4x3x2x1vox",
+                "shrink-factors": "12x8x4x2"
+            },
+            {
+                "transform": "Affine[0.1]",
+                "metric": "MI[FIXED,MOVING,1,32,Regular,0.25]",
+                "convergence": "[1000x500x250x0,1e-6,10]",
+                "smoothing-sigmas": "4x3x2x1vox",
+                "shrink-factors": "12x8x4x2"
+            },
+            {
+                "transform": "Syn[0.1,3,0]",
+                "metric": "MI[FIXED,MOVING,1,32]",
+                "convergence": "[100x100x70x50x0,1e-6,10]",
+                "smoothing-sigmas": "5x3x2x1x0vox",
+                "shrink-factors": "10x6x4x2x1"
+            }
+        ]
+    }
+}

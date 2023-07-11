@@ -1,15 +1,16 @@
 import os
 
+# paths
 mriwarp_name = 'voluba-mriwarp'
 mriwarp_home = os.path.normpath(os.path.expanduser(f'~/{mriwarp_name}'))
-parameter_home = os.path.join(mriwarp_home, 'parameters')
+parameter_home = os.path.normpath(os.path.join(mriwarp_home, 'parameters'))
 mni_template = os.path.normpath('./data/MNI152_stripped.nii.gz')
 
 # colors
 siibra_bg = '#2c2c2c'
 siibra_highlight_bg = '#404040'
 siibra_fg = '#c4c4c4'
-warp_bg = 'black'
+viewer_bg = 'black'
 
 # logos
 mriwarp_icon = f'./data/{mriwarp_name}.ico'
