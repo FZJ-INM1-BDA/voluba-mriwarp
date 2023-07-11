@@ -606,7 +606,7 @@ class App(tk.Tk):
             # Retry the region assignment for the currently selected point if
             # the output folder changes.
             if self.__annotation != (-1, -1, -1):
-                self.assign_regions2point()
+                self.assign_regions2point(self.__annotation)
 
     def __track_transform(self, variable):
         """Observe the Entry widget for the path to the transformation file.
@@ -615,11 +615,15 @@ class App(tk.Tk):
         an Entry widget (path to transformation file)
         """
         path = variable.get()
+        # If the custom transform is removed again, use the output folder.
+        if path == '':
+            self.logic.set_out_path(self.logic.get_out_path())
+            path = self.logic.get_transform_path()
         if self.logic.check_transform_path(path):
             # Retry the region assignment for the currently selected point if
             # the transformation file changes.
             if self.__annotation != (-1, -1, -1):
-                self.assign_regions2point()
+                self.assign_regions2point(self.__annotation)
 
     def __select_input(self):
         """Select an input NIfTI."""
@@ -654,7 +658,7 @@ class App(tk.Tk):
     def __select_parameters(self):
         """Select a parameter JSON."""
         # Open the latest given valid folder in the filedialog.
-        folder = '/'
+        folder = os.path.join(mriwarp_home, 'parameters')
         if self.__open_json_path.get():
             folder = os.path.dirname(self.__open_json_path.get())
 
@@ -671,7 +675,7 @@ class App(tk.Tk):
     def __select_transform(self):
         """Select a transformation file."""
         # Open the latest given valid folder in the filedialog.
-        folder = '/'
+        folder = mriwarp_home
         if self.__open_transform_path.get():
             folder = os.path.dirname(self.__open_transform_path.get())
 
@@ -685,6 +689,8 @@ class App(tk.Tk):
             filename = os.path.normpath(filename)
         self.__open_transform_path.insert(0, filename)
 
+    # TODO if selected transform is empty again, use output folder for transformation search
+
     def __set_already_mni(self):
         """Retry the region assignment for the currently selected point if the 
         image type changes.
@@ -697,7 +703,7 @@ class App(tk.Tk):
             self.__transform_button.configure(state='normal')
 
         if self.__annotation != (-1, -1, -1):
-            self.assign_regions2point()
+            self.assign_regions2point(self.__annotation)
 
     def __change_parcellation(self, parcellation):
         """Change the current parcellation that is used for region assignment.
@@ -708,9 +714,7 @@ class App(tk.Tk):
 
         # Rerun region assignment if parcellation is changed.
         if self.__annotation != (-1, -1, -1):
-            for widget in self.__region_frame.winfo_children():
-                widget.destroy()
-            self.__create_assignment()
+            self.assign_regions2point(self.__annotation)
 
     def __prepare_warping(self):
         """Prepare the logic and widgets and start warping the input NIfTI to 

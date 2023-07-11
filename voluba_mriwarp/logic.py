@@ -57,7 +57,7 @@ class Logic:
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
         
         pmaps = siibra.maps.dataframe
-        mni_pmaps = pmaps[(pmaps.maptype == "STATISTICAL")
+        mni_pmaps = pmaps[(pmaps.maptype == 'STATISTICAL')
                           & (pmaps.space == mni152.name)]
         self.__mni152_parcellations = [parcellation
                                        for parcellation in
