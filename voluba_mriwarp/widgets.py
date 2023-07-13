@@ -42,11 +42,11 @@ class ExportDialog(simpledialog.Dialog):
         # widgets for export location
         location_frame = tk.Frame(frame)
         location_frame.grid(column=0, row=0, pady=5, sticky='w')
-        label = tk.Label(location_frame, text='Location: ', anchor='w')
+        label = tk.Label(location_frame, text='PDF location: ', anchor='w')
         label.pack(side='left')
         self.__path_var = tk.StringVar()
         path = tk.Entry(location_frame, textvariable=self.__path_var, width=39)
-        pdf_path = os.path.join(mriwarp_home, self.__logic.get_name() + '.pdf')
+        pdf_path = os.path.join(self.__logic.get_out_path(), self.__logic.get_name() + '.pdf')
         path.insert(0, pdf_path)
         path.pack(side='left', padx=10)
         button = tk.Button(location_frame, text='...',
@@ -57,7 +57,7 @@ class ExportDialog(simpledialog.Dialog):
         filter_frame = tk.Frame(frame)
         filter_frame.grid(column=0, row=1, sticky='w')
         label = tk.Label(
-            filter_frame, text='Export features for regions assigned with:',
+            filter_frame, text='Export regions assigned with:',
             anchor='w')
         label.pack(anchor='w')
         keys = ['correlation', 'intersection over union', 'map value',
@@ -80,7 +80,7 @@ class ExportDialog(simpledialog.Dialog):
         # widgets for feature selection
         feature_frame = tk.Frame(frame)
         feature_frame.grid(column=0, row=2, sticky='w')
-        label = tk.Label(feature_frame, text='Features: ', anchor='w')
+        label = tk.Label(feature_frame, text='Include features: ', anchor='w')
         label.pack(anchor='w')
         self.__features = {}
         for feature in self.__logic.get_features():

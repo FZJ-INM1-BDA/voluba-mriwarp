@@ -158,7 +158,7 @@ class App(tk.Tk):
             selectcolor=siibra_highlight_bg, bd=0, width=20)
         radio_button.grid(column=0, row=0, pady=(20, 0))
         radio_button = tk.Radiobutton(
-            self.__menu, text=' Region assignment', font=font_10_b,
+            self.__menu, text=' Analysis', font=font_10_b,
             bg=siibra_bg, fg='white', variable=self.__step, value=1,
             command=self.__show_assignment_frame, indicatoron=0,
             selectcolor=siibra_highlight_bg, bd=0, width=20)
@@ -1070,7 +1070,7 @@ class App(tk.Tk):
         ) == mni_template else 'aligned' if self.__mni.get() == 1 else 'unaligned'
         self.logic.set_img_type(type)
         self.logic.set_uncertainty(float(self.__uncertainty.get()))
-        ExportDialog(self, title='Export', logic=self.logic)
+        ExportDialog(self, title='Export to PDF report', logic=self.logic)
 
     def __show_error(self, stage, error):
         """Stop the warping and show the error that occurred.
