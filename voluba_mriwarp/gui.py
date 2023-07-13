@@ -62,8 +62,6 @@ class App(tk.Tk):
     def __create_logic(self):
         """Create the instances for the logical backend."""
         self.logic = Logic()
-        self.logic.set_in_path(mni_template)
-        self.logic.set_out_path(mriwarp_home)
         self.__annotation = (-1, -1, -1)
 
     def __create_preload_window(self):
@@ -875,7 +873,7 @@ class App(tk.Tk):
                 f'transformation matrix in Advanced settings.\n'
                 f'If you need help, visit voluba-mriwarp.readthedocs.io.',
                 justify='left', image=self.__info_icon, compound='left',
-                bg=siibra_bg, fg=siibra_fg, anchor='w',
+                bg=siibra_highlight_bg, fg=siibra_fg, anchor='w',
                 wraplength=sidepanel_width - 80, padx=5)
             label.pack(fill='x', padx=5, pady=10)
 
@@ -969,7 +967,7 @@ class App(tk.Tk):
         label = tk.Label(self.__region_frame,
                          text=f'with point uncertainty: {uncertainty} mm',
                          justify='left', bg=siibra_highlight_bg, fg=siibra_fg,
-                         anchor='w', padx=5, pady=5)
+                         anchor='w', padx=5)
         label.pack(fill='x', padx=5)
 
         # widget for the transformation file
@@ -981,7 +979,7 @@ class App(tk.Tk):
             transform = 'default transformation'
         label = tk.Label(
             self.__region_frame, text=f'using: {transform}', justify='left',
-            bg=siibra_highlight_bg, fg=siibra_fg, anchor='w', padx=5)
+            bg=siibra_highlight_bg, fg=siibra_fg, anchor='w', padx=5, pady=5)
         label.pack(fill='x', padx=5)
 
         # separator with optional text
