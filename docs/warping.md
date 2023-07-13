@@ -1,31 +1,39 @@
 # Registration to MNI152 space
 
-The goal of warping is to align an image in 3D space. In _voluba-mriwarp_, a nonlinear registration method automatically warps a whole brain MRI scan to ICBM MNI152 2009c Nonlinear Asymmetric space. To perform warping in _voluba-mriwarp_ follow these steps:
+In general, the goal of warping is to align an image in 3D space. In _voluba-mriwarp_ a whole brain structural MRI scan is warped to MNI ICBM 152 2009c Nonlinear Asymmetric space using nonlinear registration methods.
+
+**Why MNI ICBM 152 2009c Nonlinear Asymmetric space?**  
+Registration to this standardized space enables anchoring the input scan to the according atlas template in the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). This allows _voluba_mriwarp_ to [analyze](analysis.md) the input scan in the detailed anatomical context of the atlas through the siibra toolsuite.
+
+!!! Info
+    For convenience, MNI ICBM 152 2009c Nonlinear Asymmetric space will be called MNI152 space from now on.
+
+To perform warping to MNI152 space in _voluba-mriwarp_ follow these steps:
 
 ![image](images/warping_steps.png)
 
 ![icon](images/1.png) **Select the input MRI scan to register.**  
-The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and has to contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan from the file explorer by clicking <mark>...</mark>.
+The <mark>Input NIfTI</mark> has to be a whole-brain T1-weighted MRI scan in NIfTI format (.nii or .nii.gz). You can either manually type in the path to the file or you can choose the input MRI scan from the file explorer by clicking <mark>...</mark>.
 
 ![icon](images/2.png) **Choose an output folder for the warping results.**  
-All results generated during warping will be saved to the given <mark>Output folder</mark>, which can also be customized to a different folder. After successful registration you can find the following files there, assuming the input MRI scan is `filename.nii.gz`:
+All results generated during warping will be saved to the given <mark>Output folder</mark>, which can also be customized to a different folder. Let's assume the input MRI scan is `filename.nii.gz`. After successful registration you can find the following files in the folder:
 
-* `filename_stripped.nii.gz`: Individual brain with the skull removed.
-* `filename_stripped_mask.nii.gz`: Brain mask covering the individual brain without the skull.
-* `filename_registered.nii.gz`: Individual brain with the skull removed registered to ICBM MNI152 2009c nonlinear asymmetric space.
-* `filename_transformationComposite.h5`: Transformation matrix encoding the warping from MNI152 to the input space.
-* `filename_transformationInverseComposite.h5`: Transformation matrix encoding the warping from the input to MNI152 space.
+* `filename_stripped.nii.gz`: Input brain with the skull removed
+* `filename_stripped_mask.nii.gz`: Brain mask covering the input brain without the skull
+* `filename_registered.nii.gz`: Input brain with the skull removed registered to MNI152 space
+* `filename_transformationComposite.h5`: Transformation matrix encoding the warping from MNI152 to the input space
+* `filename_transformationInverseComposite.h5`: Transformation matrix encoding the warping from the input to MNI152 space
 
 ![icon](images/3.png) **Switch to the <mark>Warping</mark> menu section.**
 
-![icon](images/4.png) **Warp the individual brain to MNI152 space.**  
+![icon](images/4.png) **Warp the input brain to MNI152 space.**  
 Click <mark>Warp input to MNI152 space</mark> to start the automatic nonlinear registration. Depending on your computer's memory, the size of the MRI scan and the selected [registration method](#advanced-settings), computation time may vary. The progress bar indicates that the calculation is still running and is accompanied by a status showing the performed steps. If the registration was successful, you will see a green check mark next to each step. You can find the results in your selected <mark>Output folder</mark>.
 
 ## Advanced settings
 
-Besides the default registration, _voluba-mriwarp_ allows you to use an advanced set of parameters for warping the input MRI to MNI152 space. With the advanced warping you can achieve a more accurate registration which takes more time to compute though. If you are familiar with ANTs you can also specify your own parameters in a JSON file for _voluba-mriwarp_ to use. The default and advanced registration parameters can be found in `path_to_home/voluba-mriwarp/parameters`. They also serve as an example on how to format the JSON file so that _voluba-mriwarp_ can process it. 
+Besides the default registration, _voluba-mriwarp_ allows you to use an advanced set of parameters for warping the input MRI to MNI152 space. With the advanced warping you can achieve a more accurate registration which takes more time to compute though. The default and advanced registration parameters can be found in `<path_to_your_home>/voluba-mriwarp/parameters`. To use the optimized parameter set select the `optimized.json` for the <mark>Advanced settings</mark>. The output files will then have a leading `nonlinear` in their filename. If you select the predefined default registration, _voluba-mriwarp_ will automatically find the transformation in your output folder. If you choose different registration parameters, you need to specify the location of the transformation file in the <mark>Analysis</mark> tab under <mark>Advanced settings</mark>. Thus, for the optimized parameter set you will need to choose `nonlinear_<filename>_transformationInverseComposite.h5`.
 
-In the parameter JSON you can specify multiple antsRegistration commands that are successively executed in the given order. This way you can for example do a linear registration first and use the result as an initial transformation for a nonlinear warping. For each command, you can then specify the [antsRegistration parameters](#antsregistration-options) in the form of key-value pairs ("antsRegistration option": "value"). To define different stages, use a list of key-value pairs under "stages".
+If you are familiar with ANTs you can also specify your own parameters in a JSON file for _voluba-mriwarp_ to use. The default and advanced registration parameters serve as an example on how to format the JSON file so that _voluba-mriwarp_ can process it. In the parameter JSON you can specify multiple antsRegistration commands that are successively executed in the given order. This way you can for example do a linear registration first and use the result as an initial transformation for a nonlinear warping. For each command, you can then specify the [antsRegistration parameters](#antsregistration-options) in the form of key-value `"<antsRegistration option>": "<value>"`. To define different stages, use a list of key-value pairs under `"stages"`.
 
 ```json
 {
@@ -44,20 +52,18 @@ To define your own ANTs registration command, you can use the following macros t
 
 | macro | value |
 |-------|-------|
-| NAME | name of MRI scan specified in <mark>Input NIfTI</mark> without file extension |
-| OUTPATH | Location specified in <mark>Output folder</mark> |
-| FIXED | MNI152 template |
-| MOVING | input MRI scan specified in <mark>Input NIfTI</mark> | 
-| MASK | skull-stripping mask of the input MRI |
+| NAME | filename of input MRI scan specified in <mark>Input NIfTI</mark> without file extension |
+| OUTPATH | path to location specified in <mark>Output folder</mark> |
+| FIXED | path to MNI152 template |
+| MOVING | path to input MRI scan specified in <mark>Input NIfTI</mark> | 
+| MASK | path to skull-stripping mask of the input MRI |
 | TRANSFORM | OUTPATH/NAME_transformation | 
 | VOLUME | OUTPATH/NAME_registered.nii.gz |
 
-If you select the predefined default registration, _voluba-mriwarp_ will automatically find the transformation in your output folder. If you choose the advanced warping or define your own registration parameters, you need to specify the location of the transformation file in the <mark>Region assignment</mark> tab under <mark>Advanced settings</mark>.
-
-To check the output of antsRegistration, please check the log file, which is stored in `$TEMP/voluba-mriwarp`.
+For debugging and checking the output of antsRegistration, please take a look at the log file, which is stored in `$TEMP/voluba-mriwarp`.
 
 !!! Hint
-    On Windows, $TEMP is usually `path_to_your_home/AppData/Local/Temp`.
+    On Windows, $TEMP is usually `<path_to_your_home>/AppData/Local/Temp`.
 
 ### antsRegistration options
 

@@ -190,7 +190,7 @@ class Logic:
         return self.__parcellation
 
     def get_parcellations(self):
-        """Return all available parcellations for ICBM MNI152 2009c nonlinear 
+        """Return all available parcellations for MNI ICBM 152 2009c nonlinear 
         asymmetric space.
         """
         return self.__mni152_parcellations

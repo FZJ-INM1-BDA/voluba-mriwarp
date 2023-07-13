@@ -30,7 +30,7 @@ nav:
     - 'workflow.md'
     - 'viewer.md'
     - 'warping.md'
-    - 'assignment.md'
+    - 'analysis.md'
   - Tutorials:
       - 'tutorial.md'
       - 'video_tutorial.md'

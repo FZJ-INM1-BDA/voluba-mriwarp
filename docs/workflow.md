@@ -1,6 +1,6 @@
 # General workflow
 
-_voluba-mriwarp_ consists of two panels. The side panel on the left is for [warping](warping.md) the input T1-weighted MRI scan to MNI152 space and displaying the results of the [probabilistic region assignment](assignment.md). The [viewer](viewer.md) on the right side is for displaying and inspecting the input MRI scan.
+_voluba-mriwarp_ consists of two panels. The side panel on the left is for [warping](warping.md) the input T1-weighted MRI scan to MNI152 space and displaying the results of the [analysis in the atlas context](analysis.md). The [viewer](viewer.md) on the right side is for displaying and inspecting the input MRI scan.
 
 !!! info
     When running _voluba-mriwarp_ for the first time, the startup may take a few minutes as siibra components need to be fetched.

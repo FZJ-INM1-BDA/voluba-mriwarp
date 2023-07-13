@@ -1,18 +1,10 @@
-> **A new release of voluba-mriwarp is planned until 14.07.2023 including the following features:**  
-    - specify your own warping parameters  
-    - choose between different parcellations  
-    - specify a point uncertainty  
-    - select and save multiple points  
-    - export assignments together with linked features into a PDF report
-
-
 # voluba-mriwarp
 
 > **Note: _voluba-mriwarp_ is still in development. You may still encounter bugs when using it.**
 
-VoluBA (**Volu**metric **B**rain **A**nchoring) offers tools to connect volumetric imaging data to multilevel atlases and in this way makes it accessible for analysis with the siibra toolsuite.
+voluba (**Volu**metric **B**rain **A**nchoring) offers tools to connect volumetric imaging data to multilevel atlases and in this way makes it accessible for analysis with the siibra toolsuite.
 
-_voluba-mriwarp_ is a desktop application that integrates whole brain T1-weighted MRI scans into the anatomical context of the [Julich Brain Atlas](https://julich-brain-atlas.de/). It incorporates all required components like skull stripping, registration to [ICBM MNI152 2009c nonlinear asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009), and detailed analysis with the siibra toolsuite. The corresponding functionalities are provided via open-source tools like [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1], [ANTs](http://stnava.github.io/ANTs/) and [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python). _voluba-mriwarp_ is primarily designed for Windows 10 but can also be executed on Linux.
+_voluba-mriwarp_ is a desktop application that integrates whole brain T1-weighted MRI scans into the anatomical context of the [Julich Brain Atlas](https://julich-brain-atlas.de/). It incorporates all required components like skull stripping, registration to [MNI ICBM 152 2009c Nonlinear Asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009), and detailed analysis with the siibra toolsuite. The corresponding functionalities are provided via open-source tools like [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1], [ANTs](http://stnava.github.io/ANTs/) and [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python). _voluba-mriwarp_ is primarily designed for Windows 10 but can also be executed on Linux.
 
 Warping brain data to a standardized space like MNI152 enables anchoring of whole brain MRI scans to atlas volumes like [BigBrain](https://julich-brain-atlas.de/atlas/bigbrain). However, reasonable registration requires various steps that need optimization effort. _voluba-mriwarp_ aims to simplify this workflow. With this application, you avoid installing multiple tools and tweaking parameters for a proper registration result. Instead, _voluba-mriwarp_ is an easy-to-install and easy-to-use tool combining all necessary steps into one pipeline. 
 
@@ -30,7 +22,7 @@ _voluba-mriwarp_ is designed as a Windows application but can also be executed o
 
 #### Install voluba-mriwarp
 
-1. Download the installer [here](https://fz-juelich.sciebo.de/s/GPbDWgkmvsQNq5G/download).
+1. Download the installer [here](https://github.com/FZJ-INM1-BDA/voluba-mriwarp/releases/download/v0.2.0/installer.exe).
 2. Run the installer.
 3. Run _voluba-mriwarp_ directly from the installer. Depending on the installation settings you have chosen, you can also run _voluba-mriwarp_ from the installation directory, the start menu or the desktop shortcut.
 
@@ -86,7 +78,7 @@ This project is licensed under the Apache License 2.0 - see the LICENSE file for
 
 * [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1] (skull removal)
 * [ANTs](http://stnava.github.io/ANTs/) (warping)
-* [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python) (region assignment)
+* [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python) (analysis in atlas context)
 
 [^1]: Isensee F, Schell M, Tursunova I, Brugnara G, Bonekamp D, Neuberger U, Wick A, Schlemmer HP, Heiland S, Wick W, Bendszus M, Maier-Hein KH, Kickingereder P. Automated brain extraction of multi-sequence MRI using artificial neural networks. Hum Brain Mapp. 2019; 1–13. [https://doi.org/10.1002/hbm.24750](https://doi.org/10.1002/hbm.24750)
 

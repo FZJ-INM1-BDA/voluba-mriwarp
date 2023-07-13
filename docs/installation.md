@@ -1,11 +1,3 @@
-!!! hint
-    A new release of voluba-mriwarp is planned until 14.07.2023 including the following features:  
-    - specify your own warping parameters  
-    - choose between different parcellations  
-    - specify a point uncertainty  
-    - select and save multiple points  
-    - export assignments together with linked features into a PDF report
-
 # Installation
 
 _voluba-mriwarp_ is designed as a [Windows](#fa-windows-windows-10-or-higher) application but can also be executed on [Linux](#linux).
@@ -14,7 +6,7 @@ _voluba-mriwarp_ is designed as a [Windows](#fa-windows-windows-10-or-higher) ap
 
 ### Install voluba-mriwarp
 
-1. Download the installer [here](https://fz-juelich.sciebo.de/s/GPbDWgkmvsQNq5G/download).
+1. Download the installer [here](https://github.com/FZJ-INM1-BDA/voluba-mriwarp/releases/download/v0.2.0/installer.exe).
 2. Run the installer.
 3. Run _voluba-mriwarp_ directly from the installer. Depending on the installation settings you have chosen, you can also run _voluba-mriwarp_ from the installation directory, the start menu or the desktop shortcut.
 
