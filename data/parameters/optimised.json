@@ -5,7 +5,7 @@
         "use-histogram-matching": "0",
         "winsorize-image-intensities": "[0.005,0.995]",
         "interpolation": "Linear",
-        "output": "[OUTPATH/linear_NAME_transform,OUTPATH/linear_NAME_registered.nii.gz]",
+        "output": "[OUTPATH/linear_NAME_transformation,OUTPATH/linear_NAME_registered.nii.gz]",
         "stages": [
             {
                 "transform": "Rigid[0.1]",
@@ -39,7 +39,7 @@
         "use-histogram-matching": "1",
         "winsorize-image-intensities": "[0.005,0.995]",
         "interpolation": "Linear",
-        "output": "[OUTPATH/nonlinear_NAME_transform,OUTPATH/nonlinear_NAME_registered.nii.gz]",
+        "output": "[OUTPATH/nonlinear_NAME_transformation,OUTPATH/nonlinear_NAME_registered.nii.gz]",
         "stages": [
             {
                 "transform": "SyN[0.2]",
@@ -48,7 +48,7 @@
                 "shrink-factors": "4x2x1x1",
                 "smoothing-sigmas": "2x1x1x0vox",
                 "masks": "[NULL,MASK]",
-                "initial-moving-transform": "OUTPATH/linear_NAME_transform0GenericAffine.mat"
+                "initial-moving-transform": "OUTPATH/linear_NAME_transformation0GenericAffine.mat"
             }
         ]
     }
