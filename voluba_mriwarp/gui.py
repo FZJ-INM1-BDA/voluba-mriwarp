@@ -603,10 +603,6 @@ class App(tk.Tk):
         path = variable.get()
         if self.logic.check_out_path(path):
             self.logic.set_out_path(path)
-            # Retry the region assignment for the currently selected point if
-            # the output folder changes.
-            if self.__annotation != (-1, -1, -1):
-                self.assign_regions2point()
 
     def __track_transform(self, variable):
         """Observe the Entry widget for the path to the transformation file.
@@ -615,11 +611,10 @@ class App(tk.Tk):
         an Entry widget (path to transformation file)
         """
         path = variable.get()
-        if self.logic.check_transform_path(path):
-            # Retry the region assignment for the currently selected point if
-            # the transformation file changes.
-            if self.__annotation != (-1, -1, -1):
-                self.assign_regions2point()
+        # If the custom transform is removed again, use the output folder.
+        if path == '':
+            self.logic.set_out_path(self.logic.get_out_path())
+            path = self.logic.get_transform_path()
 
     def __select_input(self):
         """Select an input NIfTI."""
@@ -654,7 +649,7 @@ class App(tk.Tk):
     def __select_parameters(self):
         """Select a parameter JSON."""
         # Open the latest given valid folder in the filedialog.
-        folder = '/'
+        folder = os.path.join(mriwarp_home, 'parameters')
         if self.__open_json_path.get():
             folder = os.path.dirname(self.__open_json_path.get())
 
@@ -671,7 +666,7 @@ class App(tk.Tk):
     def __select_transform(self):
         """Select a transformation file."""
         # Open the latest given valid folder in the filedialog.
-        folder = '/'
+        folder = mriwarp_home
         if self.__open_transform_path.get():
             folder = os.path.dirname(self.__open_transform_path.get())
 
@@ -696,21 +691,12 @@ class App(tk.Tk):
         else:
             self.__transform_button.configure(state='normal')
 
-        if self.__annotation != (-1, -1, -1):
-            self.assign_regions2point()
-
     def __change_parcellation(self, parcellation):
         """Change the current parcellation that is used for region assignment.
 
         :param str parcellation: parcellation for region assignment
         """
         self.logic.set_parcellation(parcellation)
-
-        # Rerun region assignment if parcellation is changed.
-        if self.__annotation != (-1, -1, -1):
-            for widget in self.__region_frame.winfo_children():
-                widget.destroy()
-            self.__create_assignment()
 
     def __prepare_warping(self):
         """Prepare the logic and widgets and start warping the input NIfTI to 
@@ -789,11 +775,6 @@ class App(tk.Tk):
                          bg=siibra_highlight_bg, fg='white', anchor='w',)
         label.pack(anchor='w', padx=10, pady=(5, 20))
         self.__warp_button.configure(state='normal')
-
-        # Retry the region assignment for the currently selected point when
-        # warping finishes.
-        if self.__annotation != (-1, -1, -1):
-            self.assign_regions2point()
 
     def __save_point(self, point, label):
         """Save a point and add its corresponding widgets.
@@ -931,9 +912,10 @@ class App(tk.Tk):
         threading.Thread(target=self.__show_wip, daemon=True).start()
 
         # Assign regions.
+        uncertainty = self.__uncertainty.get()
         try:
             source, target, results, urls = self.logic.assign_regions2point(
-                self.__annotation, float(self.__uncertainty.get()))
+                self.__annotation, float(uncertainty))
         except SubprocessFailedError as e:
             logging.getLogger(mriwarp_name).error(
                 f'Error during region calculation: {str(e)}')
@@ -978,7 +960,14 @@ class App(tk.Tk):
 
         # widget for the parcellation
         label = tk.Label(self.__region_frame,
-                         text=f'assign to: {self.logic.get_parcellation()}',
+                         text=f'assigned to: {self.logic.get_parcellation()}',
+                         justify='left', bg=siibra_highlight_bg, fg=siibra_fg,
+                         anchor='w', padx=5, pady=5)
+        label.pack(fill='x', padx=5)
+
+        # widget for the point uncertainty
+        label = tk.Label(self.__region_frame,
+                         text=f'with point uncertainty: {uncertainty} mm',
                          justify='left', bg=siibra_highlight_bg, fg=siibra_fg,
                          anchor='w', padx=5, pady=5)
         label.pack(fill='x', padx=5)

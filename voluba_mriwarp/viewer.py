@@ -24,7 +24,7 @@ class ImageCanvas:
         self.zoom = 1.0
         # zoom magnitude
         self.__delta = 1.3
-        self.__filter = Image.ANTIALIAS
+        self.__filter = Image.LANCZOS
         self.__previous_keyboard_state = 0
         self.image = np.asarray(image, dtype=np.uint8)
         self.__annotation = (-1, -1, -1)
