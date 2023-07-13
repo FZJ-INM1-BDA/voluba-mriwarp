@@ -53,6 +53,10 @@ class Logic:
         # Download HD-BET parameters.
         maybe_download_parameters(0)
 
+        # Initialize input and output.
+        self.set_in_path(mni_template)
+        self.set_out_path(mriwarp_home)
+
         # Get all parcellations available for MNI152 space.
         mni152 = siibra.spaces.MNI_152_ICBM_2009C_NONLINEAR_ASYMMETRIC
         

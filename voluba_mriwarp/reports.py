@@ -274,7 +274,6 @@ class AssignmentReport:
                         filenames.append(filename)
             return filenames
 
-    # TODO switch subject and mni points
     def _build_pdf(
             self, assignments, input_plot, pmap_plots, feature_plots, labels,
             subject_points, mni_points, image, output_file):
