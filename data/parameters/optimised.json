@@ -1,0 +1,55 @@
+{
+    "linear": {
+        "verbose": "1",
+        "dimensionality": "3",
+        "use-histogram-matching": "0",
+        "winsorize-image-intensities": "[0.005,0.995]",
+        "interpolation": "Linear",
+        "output": "[OUTPATH/linear_NAME_transformation,OUTPATH/linear_NAME_registered.nii.gz]",
+        "stages": [
+            {
+                "transform": "Rigid[0.1]",
+                "metric": "GC[FIXED,MOVING,1,,Regular,0.25]",
+                "convergence": "[1000x500x250x100,1e-6,10]",
+                "shrink-factors": "8x4x2x1",
+                "smoothing-sigmas": "3x2x1x0vox",
+                "masks": "[NULL,MASK]"
+            },
+            {
+                "transform": "Affine[0.1]",
+                "metric": "GC[FIXED,MOVING,1,,Regular,0.25]",
+                "convergence": "[1000x500x250x100,1e-6,10]",
+                "shrink-factors": "8x4x2x1",
+                "smoothing-sigmas": "3x2x1x0vox",
+                "masks": "[NULL,MASK]"
+            },
+            {
+                "transform": "Affine[0.1]",
+                "metric": "GC[FIXED,MOVING,1,,Regular,0.25]",
+                "convergence": "[1000x500x250x100,1e-6,10]",
+                "shrink-factors": "8x4x2x1",
+                "smoothing-sigmas": "3x2x1x0vox",
+                "masks": "[NULL,MASK]"
+            }
+        ]
+    },
+    "nonlinear": {
+        "verbose": "1",
+        "dimensionality": "3",
+        "use-histogram-matching": "1",
+        "winsorize-image-intensities": "[0.005,0.995]",
+        "interpolation": "Linear",
+        "output": "[OUTPATH/nonlinear_NAME_transformation,OUTPATH/nonlinear_NAME_registered.nii.gz]",
+        "stages": [
+            {
+                "transform": "SyN[0.2]",
+                "metric": "CC[FIXED,MOVING,1,4,None,1]",
+                "convergence": "[100x100x100x50,1e-6,10]",
+                "shrink-factors": "4x2x1x1",
+                "smoothing-sigmas": "2x1x1x0vox",
+                "masks": "[NULL,MASK]",
+                "initial-moving-transform": "OUTPATH/linear_NAME_transformation0GenericAffine.mat"
+            }
+        ]
+    }
+}

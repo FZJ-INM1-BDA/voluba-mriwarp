@@ -5,12 +5,6 @@ It has been designed for the [EBRAINS](https://ebrains.eu) infrastructure for br
 
 _voluba-mriwarp_ has received funding from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
 
-[![logo_centered](images/FZJ_logo.png)](https://www.fz-juelich.de/en)
-
-[![logo](images/EBRAINS_logo.png)](https://ebrains.eu)
-[![logo](images/HBP_logo.png)](https://humanbrainproject.eu/en/)
-![logo](images/EU_logo.jpg)
-
 <h1>References</h1>
 
 * [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1] (skull removal)

@@ -1,0 +1,25 @@
+{
+    "creators": [
+      {
+        "affiliation": "Institute of Neuroscience and Medicine (INM-1), Forschungszentrum Jülich, Germany",
+        "name": "Thönnißen, Julia",
+        "orcid": "0000-0002-5467-871X"
+      },
+      {
+        "affiliation": "Institute of Neuroscience and Medicine (INM-1), Forschungszentrum Jülich, Germany",
+        "name": "Dickscheid, Timo",
+        "orcid": "0000-0002-9051-3701"
+      }
+    ],
+    "license": "Apache-2.0",
+    "title": "voluba-mriwarp: Integration of whole-brain MRI scans into multilevel brain atlases",
+    "description": "voluba-mriwarp is a desktop application that integrates whole-brain T1-weighted MRI scans into the anatomical context of the EBRAINS Human Brain Atlas. It incorporates all required components like skull stripping, registration to MNI ICBM 152 2009c Nonlinear Asymmetric space, and detailed analysis with the siibra toolsuite. The corresponding functionalities are provided via open-source tools like HD-BET, ANTs and siibra-python. voluba-mriwarp is primarily designed for Windows 10 but can also be executed on Linux.\nWarping brain data to a standardized space like MNI152 enables anchoring of whole-brain MRI scans to atlas volumes and therefore facilitates analysis in a detailed anatomical context. However, reasonable registration requires various steps that need optimization effort. _voluba-mriwarp_ aims to simplify this workflow. With this application, you avoid installing multiple tools and tweaking parameters for a proper registration result. Instead, _voluba-mriwarp_ is an easy-to-install and easy-to-use tool combining all necessary steps into one pipeline.\napplies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively analyze points by making a probabilistic assignment of coordinates in the input space to brain regions of the EBRAINS Human Brain Atlas. To get an overview of more information about a brain region, you can access siibra-explorer through the application. For further analysis, _voluba-mriwarp_ offers to export the anatomical assignments together with linked multimodal data features like receptor densities, cell distributions or brain connectivity.",
+    "keywords": [
+      "neuroimaging",
+      "skull stripping",
+      "image registration",
+      "brain atlases",
+      "mri scans"
+    ],
+    "upload_type": "software"
+  }
