@@ -79,7 +79,9 @@ class AssignmentReport:
         """
         mapping = {
             '<': lambda column, value: column < value,
+            '<=': lambda column, value: column < value,
             '>': lambda column, value: column > value,
+            '>=': lambda column, value: column > value,
             '=': lambda column, value: column == value
         }
         column, sign, value = self.filter
