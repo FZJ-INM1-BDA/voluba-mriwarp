@@ -4,15 +4,15 @@
 
 voluba (**Volu**metric **B**rain **A**nchoring) offers tools to connect volumetric imaging data to multilevel atlases and in this way makes it accessible for analysis with the siibra toolsuite.
 
-_voluba-mriwarp_ is a desktop application that integrates whole brain T1-weighted MRI scans into the anatomical context of the [Julich Brain Atlas](https://julich-brain-atlas.de/). It incorporates all required components like skull stripping, registration to [MNI ICBM 152 2009c Nonlinear Asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009), and detailed analysis with the siibra toolsuite. The corresponding functionalities are provided via open-source tools like [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1], [ANTs](http://stnava.github.io/ANTs/) and [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python). _voluba-mriwarp_ is primarily designed for Windows 10 but can also be executed on Linux.
-
-Warping brain data to a standardized space like MNI152 enables anchoring of whole brain MRI scans to atlas volumes like [BigBrain](https://julich-brain-atlas.de/atlas/bigbrain). However, reasonable registration requires various steps that need optimization effort. _voluba-mriwarp_ aims to simplify this workflow. With this application, you avoid installing multiple tools and tweaking parameters for a proper registration result. Instead, _voluba-mriwarp_ is an easy-to-install and easy-to-use tool combining all necessary steps into one pipeline. 
+_voluba-mriwarp_ is a desktop application that integrates whole-brain T1-weighted MRI scans into the anatomical context of the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). It incorporates all required components like skull stripping, registration to [MNI ICBM 152 2009c Nonlinear Asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009), and detailed analysis with the siibra toolsuite. The corresponding functionalities are provided via open-source tools like [HD-BET](https://github.com/MIC-DKFZ/HD-BET)[^1], [ANTs](http://stnava.github.io/ANTs/) and [siibra-python](https://github.com/FZJ-INM1-BDA/siibra-python). _voluba-mriwarp_ is primarily designed for Windows 10 but can also be executed on Linux.
 
 > We designed _voluba-mriwarp_ as a desktop application. Therefore, **the input MRI dataset will not be uploaded to any online services**. It remains only on your local computer.
 
-_voluba-mriwarp_ applies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively assign brain regions to a point in the input space. Select a location in the displayed brain of a subject to perform a probabilistic assignment using Julich-Brain Cytoarchitectonic Maps 2.9. Hence, you can estimate the probability of a brain region occurring at the selected point. To explore even more information about a cytoarchitectonic area, you can access [siibra-explorer](https://atlases.ebrains.eu/viewer/human) through the application.
+Warping brain data to a standardized space like MNI152 enables anchoring of whole-brain MRI scans to atlas volumes and therefore facilitates analysis in a detailed anatomical context. However, reasonable registration requires various steps that need optimization effort. _voluba-mriwarp_ aims to simplify this workflow. With this application, you avoid installing multiple tools and tweaking parameters for a proper registration result. Instead, _voluba-mriwarp_ is an easy-to-install and easy-to-use tool combining all necessary steps into one pipeline. 
 
-![image](docs/images/teaser.png)
+_voluba-mriwarp_ applies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively analyze points by making a probabilistic assignment of coordinates in the input space to brain regions of the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). To get an overview of more information about a brain region, you can access [siibra-explorer](https://atlases.ebrains.eu/viewer/human) through the application. For further analysis, _voluba-mriwarp_ offers to export the anatomical assignments together with linked multimodal data features like receptor densities, cell distributions or brain connectivity.
+
+![image](docs/images/teaser2.png)
 
 ## Getting Started
 
@@ -37,7 +37,7 @@ Hint: The default installation directory is `C:\Users\your_username\AppData\Loca
 #### Requirements
 
 * Python 3.8 or higher
-* [ANTs](https://github.com/ANTsX/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS)
+* [ANTs Eotapinoma](https://github.com/ANTsX/ANTs/releases/tag/v2.4.4)
 
 #### Install voluba-mriwarp
 
@@ -85,5 +85,3 @@ This project is licensed under the Apache License 2.0 - see the LICENSE file for
 ## Acknowledgments
 
 This software code is funded from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
-
-![image](./data/hbp_ebrains_color_dark.png)
