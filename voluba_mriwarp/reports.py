@@ -94,7 +94,7 @@ class AssignmentReport:
 
     def create_report(
             self, assignments, subject_points, mni_points, labels, image,
-            features, receptors, cohorts, output_file):
+            image_filename, features, receptors, cohorts, output_file):
         """Create a PDF report of assigned regions and linked features.
 
         :param list assignments: region assignments for multiple points
@@ -102,6 +102,7 @@ class AssignmentReport:
         :param list mni_points: points in MNI152 space
         :param list labels: labels for each point
         :param nibabel.Nifti1Image image: input image
+        :param str image_filename: filename of the input image
         :param list features: linked features to export for each region
         :param list receptors: receptors to plot a ReceptorDensityProfile for
         :param list cohorts: cohorts to plot connectivity plots for
@@ -156,7 +157,7 @@ class AssignmentReport:
         # Build the PDF report.
         self._build_pdf(
             assignments, input_plot, pmap_plots, feature_plots, labels,
-            subject_points, mni_points, image, output_file)
+            subject_points, mni_points, image_filename, output_file)
         matplotlib.use(backend)
 
     def _plot_input(self, image):
@@ -276,7 +277,7 @@ class AssignmentReport:
 
     def _build_pdf(
             self, assignments, input_plot, pmap_plots, feature_plots, labels,
-            subject_points, mni_points, image, output_file):
+            subject_points, mni_points, image_filename, output_file):
         """Actually create a PDF report of assigned regions and linked features.
 
         :param list assignments: region assignments for multiple points
@@ -286,7 +287,7 @@ class AssignmentReport:
         :param list labels: labels for each point
         :param list subject_points: points in subject's physical space
         :param list mni_points: points in MNI152 space
-        :param nibabel.Nifti1Image image: input image
+        :param str image_filename: filename of the input image
         :param str output_file: PDF file to export report to
         """
         logging.getLogger(mriwarp_name).info(
@@ -308,7 +309,7 @@ class AssignmentReport:
         pdf.set_xy(left, top + 14)
         pdf.multi_cell(
             0, text_height, '\n'.join(
-                [f'Input scan: {os.path.basename(image.get_filename())}',
+                [f'Input scan: {image_filename}',
                  f'Parcellation: {self.pmaps.parcellation.name}', ' ',
                  f'For each point, regions with {self.filter[0]} '
                  f'{self.filter[1]} {self.filter[2]} are assigned.',

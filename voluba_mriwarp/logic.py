@@ -579,6 +579,7 @@ class Logic:
         report = AssignmentReport(
             parcellation=self.__parcellation, filter=filter,
             progress=progress_indicator)
+        filename = os.path.basename(self.__in_path)
 
         # Transfer points to siibra.Point objects.
         if self.__image_type == 'unaligned':
@@ -602,5 +603,6 @@ class Logic:
                              subject_points=self.__saved_points,
                              mni_points=mni_points, labels=labels,
                              image=self.__nifti_image, features=features,
+                             image_filename=filename,
                              receptors=receptors, cohorts=cohorts,
                              output_file=output_file)
