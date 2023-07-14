@@ -2,7 +2,7 @@
 
 Initially, the viewer displays the MNI152 template. To load an MRI scan into the viewer, follow this step:
 
-![image](images/data_menu.png)
+![image_centered](images/data_menu.png)
 
 ![icon](images/1.png) **Select the input MRI scan to inspect.**  
 The <mark>Input NIfTI</mark> has to be in NIfTI format (.nii or .nii.gz) and has to contain the whole brain of the subject. You can either manually type in the path to the file or you can choose the input MRI scan in the file explorer by clicking <mark>...</mark>.

@@ -9,21 +9,6 @@ div.autodoc-members {
   margin-bottom: 15px;
 }
 
-img[alt="snippet"] {
-  width: 40%;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-img[alt="screenshot"] {
-  width: 75%;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-
-}
-
 img[alt="logo"] {
     height: 50px;
     margin-left: 20px;
@@ -48,6 +33,12 @@ img[alt="gif"] {
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+img[alt="image_centered"] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 table img

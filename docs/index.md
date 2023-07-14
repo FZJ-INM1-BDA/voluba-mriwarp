@@ -15,6 +15,6 @@ Warping brain data to a standardized space like MNI152 enables anchoring of whol
 
 _voluba-mriwarp_ applies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively make a probabilistic assignment of coordinates in the input space to brain regions of the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). Hence, you can estimate the probability of a brain region occurring at the selected coordinate. To explore even more information about a cytoarchitectonic area, you can access [siibra-explorer](https://atlases.ebrains.eu/viewer/human) through the application.
 
-![image](images/teaser2.png)
+![image_centered](images/teaser2.png)
 
 [^1]: Isensee F, Schell M, Tursunova I, Brugnara G, Bonekamp D, Neuberger U, Wick A, Schlemmer HP, Heiland S, Wick W, Bendszus M, Maier-Hein KH, Kickingereder P. Automated brain extraction of multi-sequence MRI using artificial neural networks. Hum Brain Mapp. 2019; 1–13. [https://doi.org/10.1002/hbm.24750](https://doi.org/10.1002/hbm.24750)

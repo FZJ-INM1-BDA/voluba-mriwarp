@@ -10,7 +10,8 @@ The general workflow for _voluba-mriwarp_ can be summarized as follows:
 ![icon](images/1.png) Choose an **input MRI scan**.  
 ![icon](images/2.png) Choose an **output folder** for the warping results.  
 ![icon](images/3.png) **Warp** the input MRI to MNI152 space.  
-![icon](images/4.png) **Click or enter a coordinate** to make a probabilistic region assignment.  
-![icon](images/5.png) **View more details** about a specific region in [siibra-explorer](https://atlases.ebrains.eu/viewer/go/human).
+![icon](images/4.png) **Click or enter a coordinate** to perform an analysis in the atlas context.  
+![icon](images/5.png) Get a **more detailed overview** about a specific region in [siibra-explorer](https://atlases.ebrains.eu/viewer/go/human).  
+![icon](images/6.png) **Export** assigned regions together with linked data features to a PDF report for extended analysis.
 
-![image](images/workflow4.png)
+![image_centered](images/workflow4.png)

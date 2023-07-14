@@ -23,8 +23,8 @@ The [General settings](#general-settings) allow you to adjust the details of the
 ![icon](images/5.png) **Select a point in subject's space to analyze it**.  
 There are two ways to choose points. In the [interactive viewer](#viewer) you can select a point by double clicking a location in the input scan. Secondly, you can manually type in a coordinate in the first row of the <mark>Points</mark> table. _voluba-mriwarp_ will then assign brain regions to this point and display the results in the side panel. For more information about the tables, see the section on [Point selection](#point-selection) and [Results of the analysis](#results-of-the-analysis).
 
-![icon](images/6.png) **View more details about a specific region in siibra-explorer.**  
-Double click a row in the assignment table to get more information about the brain region in [siibra-explorer](https://atlases.ebrains.eu/viewer/human). Interactively explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.
+![icon](images/6.png) **Get a quick overview about a specific region in siibra-explorer.**  
+Double click a row in the assignment table to quickly view more information about the brain region in [siibra-explorer](https://atlases.ebrains.eu/viewer/human). Interactively explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.
 
 ![icon](images/7.png) **Export a PDF report.**  
 To retain your analysis _voluba-mriwarp_ offers to create a PDF report of the anatomical assignments which can optionally be extended with linked data features (e.g. cell density, receptor density or connectivity) of your choice.
@@ -48,7 +48,7 @@ In the advanced settings you can specify a particular transformation file that i
 
 All points shown in _voluba-mriwarp_ are given in RAS physical space. To select a location, you can either double-click the according position in the interactive viewer or manually type in the coordinates in the first row of the `Points` table.
 
-![screenshot](images/points.png)
+![image_centered](images/points.png)
 
 The <Points> table holds the currently selected point as well as all points that were saved. You can inspect and reassign regions to these points again at any time. Furthermore, the export functionality will include all saved points in the PDF report. The currently selected point can be saved to the table by clicking the floppy disk icon. _voluba-mriwap_ will automatically generate a label for each saved point by counting. To give meaning to a point, you can specify and adjust its name in the <mark>Label</mark> column. A saved point can be removed from the table by clicking the trash icon. If you want to repeat the assignment for a point again, click the brain icon in the row of the according location.
 
@@ -62,9 +62,9 @@ After selecting a point you can find a table presenting the results of the point
 | map value | probability value of the region in the parcellation map |
 | correlation* | correlation coefficient |
 | intersection over union* | intersection over union |
-| map weighted mean* | weighted average of the map values over the blob |
+| map weighted mean* | mean of the blob weighted by the map values |
 | map containedness* | containness score of the region wrt. the blob |
-| input weighted mean* | ? |
+| input weighted mean* | mean of the map values weighted by the blob |
 | input containedness* | containedness score of the blob wrt. the region |
 
 Per default, values are sorted by correlation. To sort for a different measure click on the corresponding column header in the table.
@@ -75,4 +75,4 @@ _voluba-mriwarp_ offers to create a PDF report of anatomical assignments for all
 
 You are then asked to specify the export location for the PDF which initially points to the directory of <mark>Output folder</mark>. Following this you can define a filter which restricts to regions that fulfill the given requirement. For example, for each point only regions assigned with correlation > 0.3 are included in the report by default. In the last section you can finally choose between different multimodal data features complementing your existing analysis. In case you are interested in receptor density, you will need to select specific receptors that will be investigated. For connectivity features an additional selection of a cohort is required. Clicking on <mark>Export</mark> initiates the export procedure.
 
-# TODO screenshot of export dialog
+![image_centered](images/export.png)
