@@ -26,7 +26,7 @@ You can choose this file from the file explorer by clicking <mark>...</mark>.
 
 * Click <mark>Warp input to MNI152 space</mark> to warp the brain of the subject to MNI152 space using the default registration method. This method is relatively fast but less accurate than the [advanced version](../warping/#advanced-settings). The progress bar indicates that the calculation is still running. When the registration is finished, a green checkmark will appear next to each step performed.
 
-    ![image](images/tutorial_warping2.png)
+    ![image](images/tutorial_warping.png)
 
 ## Analyze a point in the atlas context
 
@@ -48,7 +48,7 @@ After successful warping _voluba-mriwarp_ can now use the resulting transformati
 
 * You should soon see the results of the anatomical assignment at the bottom of the side panel. As we specified a point uncertainty [different measures](../analysis/#results-of-the-analysis) for each assigned region are shown. Indeed, the region that correlates most with the selected point is **Area hOc1 (V1, 17, CalcS) left** which is part of the visual system.
     
-    ![image](images/tutorial_assignment2.png)
+    ![image](images/tutorial_assignment.png)
 <br/><br/>
 
 ## Use the results

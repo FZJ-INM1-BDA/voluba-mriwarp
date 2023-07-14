@@ -14,4 +14,4 @@ The general workflow for _voluba-mriwarp_ can be summarized as follows:
 ![icon](images/5.png) Get a **quick overview** about an assigned brain region in [siibra-explorer](https://atlases.ebrains.eu/viewer/go/human).  
 ![icon](images/6.png) **Export** assigned brain regions together with linked data features to a PDF report for extended analysis.
 
-![image_centered](images/workflow4.png)
+![image_centered](images/workflow.png)

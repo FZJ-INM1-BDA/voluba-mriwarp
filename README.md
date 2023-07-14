@@ -12,7 +12,7 @@ Warping brain data to a standardized space like MNI152 enables anchoring of whol
 
 _voluba-mriwarp_ applies a set of predefined parameters to remove the skull and warp the input brain scan to MNI152 space. You can utilize the warping results in _voluba-mriwarp_ to interactively analyze points by making a probabilistic assignment of coordinates in the input space to brain regions of the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). To get an overview of more information about a brain region, you can access [siibra-explorer](https://atlases.ebrains.eu/viewer/human) through the application. For further analysis, _voluba-mriwarp_ offers to export the anatomical assignments together with linked multimodal data features like receptor densities, cell distributions or brain connectivity.
 
-![image](docs/images/teaser2.png)
+![image](docs/images/teaser.png)
 
 ## Getting Started
 
