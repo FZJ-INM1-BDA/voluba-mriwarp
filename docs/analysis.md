@@ -46,7 +46,7 @@ In the advanced settings you can specify a particular transformation file that i
 
 ## Point selection
 
-All points shown in _voluba-mriwarp_ are given in RAS physical space. To select a location, you can either double-click the according position in the interactive viewer or manually type in the coordinates in the first row of the `Points` table.
+All points shown in _voluba-mriwarp_ are given in RAS physical space. To select a location, you can either double-click the according position in the interactive viewer or manually type in the coordinates in the first row of the <mark>Points</mark> table.
 
 ![image_centered](images/points.png)
 

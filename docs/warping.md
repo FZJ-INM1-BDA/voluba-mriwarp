@@ -1,6 +1,6 @@
 # Registration to MNI152 space
 
-In general, the goal of warping is to align an image in 3D space. In _voluba-mriwarp_ a whole brain structural MRI scan is warped to MNI ICBM 152 2009c Nonlinear Asymmetric space using nonlinear registration methods.
+In general, the goal of warping is to align an image in 3D space. In _voluba-mriwarp_ a whole-brain structural MRI scan is warped to [MNI ICBM 152 2009c Nonlinear Asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009) using nonlinear registration methods.
 
 **Why MNI ICBM 152 2009c Nonlinear Asymmetric space?**  
 Registration to this standardized space enables anchoring the input scan to the according atlas template in the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). This allows _voluba_mriwarp_ to [analyze](analysis.md) the input scan in the detailed anatomical context of the atlas through the siibra toolsuite.

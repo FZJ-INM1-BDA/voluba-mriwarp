@@ -4,7 +4,7 @@ In this tutorial, you will warp an example MRI scan to [MNI ICBM 152 2009c Nonli
 
 ## Get the example dataset
 
-Let's start the tutorial by downloading an example dataset. We use a sample from the publicly available [NFBS Skull-Stripped Repository](http://preprocessed-connectomes-project.org/NFB_skullstripped/) and choose the T1-weighted MRI scan `sub-A00028185_ses-NFB3_T1w.nii.gz` of subject `A00028185`. This scan contains the subject's whole brain including the skull. 
+Let's start the tutorial by downloading an example dataset. We use a sample from the publicly available [NFBS Skull-Stripped Repository](http://preprocessed-connectomes-project.org/NFB_skullstripped/) and choose the T1-weighted MRI scan `sub-A00028185_ses-NFB3_T1w.nii.gz` of subject `A00028185`. This scan contains the subject's whole-brain including the skull. 
 
 * Download the NFBS skull-stripped images from [here](http://preprocessed-connectomes-project.org/NFB_skullstripped/).
 * Unpack the .tar.gz archive.
@@ -16,7 +16,7 @@ Let's start the tutorial by downloading an example dataset. We use a sample from
 
 To be able to perform an analysis in the anatomical context of the atlas we first need to register the input MRI scan to the standardized MNI152 space.
 
-* Launch _voluba-mriwarp_
+* Launch _voluba-mriwarp_.
 * Choose `<path_to_dataset>/NFBS_Dataset/A00028185/sub-A00028185_ses-NFB3_T1w.nii.gz` as <mark>Input NIfTI</mark>.  
 You can choose this file from the file explorer by clicking <mark>...</mark>.
 * Set the <mark>Output folder</mark> to the directory where you want the warping results to be saved. We keep the default location `<path_to_your_home>/voluba-mriwarp`.
@@ -30,11 +30,11 @@ You can choose this file from the file explorer by clicking <mark>...</mark>.
 
 ## Analyze a point in the atlas context
 
-After successful warping _voluba-mriwarp_ can now use the resulting transformation to warp points of the input MRI scan to MNI152 space. In this way, it can assign brain regions of the EBRAINS Human Atlas to these points through the siibra toolsuite. 
+After successful warping _voluba-mriwarp_ can now use the resulting transformation to warp points of the input MRI scan to MNI152 space. In this way, it can assign brain regions of the EBRAINS Human Brain Atlas to these points through the siibra toolsuite. 
 
 * Switch to the <mark>Analysis</mark> tab.
 * Keep the setting for <mark>Input already in MNI152 space</mark> as the example MRI scan shows the subject in input space and not in MNI152 space.
-* Leave the parcellation as is because we want to assign the point to brain regions of the `Julich-Brain Cytoarchitectonic Atlas (v3.0)`.
+* Leave the parcellation as is because we want to assign the point to brain regions of the [Julich-Brain Cytoarchitectonic Atlas (v3.0)](https://search.kg.ebrains.eu/instances/7ad727a1-537d-4f80-a69b-ac8b184a823c).
 * Set the <mark>Point uncertainty</mark> to 3 mm. The reason for this is that coordinates are typically not exact but have several millimeters of uncertainty (especially after warping).
     
     ![image](images/tutorial_settings.png)
@@ -53,16 +53,23 @@ After successful warping _voluba-mriwarp_ can now use the resulting transformati
 
 ## Use the results
 
+Now that we investigated which brain regions the selected point correlates with, we can perform further analysis based on these regions. Besides getting a quick overview with [siibra-explorer](https://atlases.ebrains.eu/viewer/#/) _voluba-mriwarp_ offers to export the extended analysis to a PDF report.
+
+**Quick overview**  
+
 * Double-click a row in the table to open the according region in a browser window in siibra-explorer. This allows you to get a quick overview of more details about an assigned region and linked multimodal data features. 
 
     ![image](images/hOc1.png)
 <br/><br/>
 
-* Click on the save button next to the brain icon to note the point for export and thus retain your analysis performed with _voluba-mriwarp_.
-* Click ![icon](images/tutorial_export_btn.png) next to <mark>Points</mark> to export your analysis to a PDF report for all saved points. 
+**Detailed report**
+
+* Go back to _voluba_mriwarp_.
+* Click on the save button next to the brain icon in the <mark>Points</mark> table to note the selected point for further analysis and PDF export.
+* Select ![icon](images/tutorial_export_btn.png) next to <mark>Points</mark> to define the analysis and create the PDF report for all saved points. 
 * Keep the <mark>PDF location</mark> as is to save the PDF to the output folder. If you would like to choose a different location, click on <mark>...</mark> to select a folder and filename.
-* Set the filter to `input containedness >= 0.5` as we are only interested in regions in which the saved point is likely contained. This will only include brain regions to the report that fulfill the requirement for the assignment. 
-* Choose between different multimodal data features that complement your analysis. We are interested in cell densities, connectivity and receptor densities. For receptor density you need to select specific receptors and for connectivity a cohort is required. For this tutorial, we choose `GABAA` and `GABAB` as well as the `1000BRAINS` study.
+* Set the filter to `input containedness >= 0.5` as, in this tutorial, we are only interested in regions in which the saved point is likely contained. This will only include brain regions to the report that fulfill the requirement for the assignment. Feel free to adjust the filter at your will.
+* Choose between different multimodal data features that complement your analysis. Here, we are interested in cell densities, connectivity and receptor densities. For receptor density you need to select specific receptors and for connectivity a cohort is required. For this tutorial, we choose `GABAA` and `GABAB` as well as the `1000BRAINS` study.
 * Use the <mark>Export</mark> button to initialize the creation of the PDF report.
 
     ![image](images/tutorial_export.png)
