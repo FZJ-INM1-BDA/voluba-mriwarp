@@ -1,5 +1,5 @@
 git+https://github.com/MIC-DKFZ/HD-BET.git#egg=HD-BET
-git+https://github.com/JThoennissen/siibra-explorer-toolsuite.git#egg=siibra-explorer-toolsuite
+git+https://github.com/JThoennissen/siibra-explorer-toolsuite.git@v0.0.1#egg=siibra-explorer-toolsuite
 siibra==0.4a59
 tkfontawesome==0.2.0
 matplotlib==3.7.2
