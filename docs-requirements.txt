@@ -1,2 +1,3 @@
 mkdocs >= 1.2.2
 fontawesome_markdown
+markdown < 3.4.0
