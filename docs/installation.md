@@ -1,52 +1,65 @@
 # Installation
 
-_voluba-mriwarp_ is designed as a [Windows](#fa-windows-windows-10-or-higher) application but can also be executed on [Linux](#linux).
+=== "Windows"
 
-## :fa-windows: &nbsp; Windows 10 or higher
+    1. Install the following prerequisites
+        - Python 3.8 or higher
+        - [ANTs Eotapinoma](https://github.com/ANTsX/ANTs/releases/tag/v2.4.4)
 
-### Install voluba-mriwarp
+    1. Clone voluba-mriwarp from GitHub
 
-1. Download the installer [here](https://github.com/FZJ-INM1-BDA/voluba-mriwarp/releases/download/v0.2.0/installer.exe).
-2. Run the installer.
-3. Run _voluba-mriwarp_ directly from the installer. Depending on the installation settings you have chosen, you can also run _voluba-mriwarp_ from the installation directory, the start menu or the desktop shortcut.
-
-### Uninstall voluba-mriwarp
-
-Run `Uninstall` from the installation directory or the `voluba-mriwarp` folder in your start menu, depending on the installation settings that you chose. If you wish to delete the default output folder, delete `voluba-mriwarp` from your home directory. Note that this may remove warping results.
-
-!!! hint
-    The default installation directory is `C:\Users\your_username\AppData\Local\voluba-mriwarp`.
-
-## :fa-linux: &nbsp; Linux
-
-### Requirements
-
-* Python 3.8 or higher
-* [ANTs Eotapinoma](https://github.com/ANTsX/ANTs/releases/tag/v2.4.4)
-
-### Install voluba-mriwarp
-
-1. Install all [requirements](#requirements).
-2. Clone _voluba-mriwarp_ from GitHub:
-
-        :::bash
+        ```powershell
         git clone https://github.com/FZJ-INM1-BDA/voluba-mriwarp.git
+        ```
 
-3. Install all Python requirements with pip:
+    1. Create a virtual environment
 
-        :::bash
+        ```powershell
         cd voluba-mriwarp
-        pip install scikit-build
+        python -m venv venv
+        ./venv/Scripts/activate
+        ```
+
+    1. Install all Python requirements with pip
+
+        ```powershell
         pip install -r requirements.txt
+        ```
 
-4. Run _voluba-mriwarp_:
+    1. Run voluba-mriwarp:
 
-        :::bash
-        python3 start_app.py
+        ```powershell
+        python start_app.py
+        ```
 
-!!! warning
-    If you run _voluba-mriwarp_ via Python on Windows, you need to change all `"/"` in `HD_BET.utils.maybe_mkdir_p` to `"\\"`.
+=== "Linux"
 
-### Uninstall voluba-mriwarp
+    1. Install the following prerequisites:
+        - Python 3.8 or higher
+        - [ANTs Eotapinoma](https://github.com/ANTsX/ANTs/releases/tag/v2.4.4)
 
-Delete `voluba-mriwarp` from the installation directory. If you wish to delete the default output folder, delete `voluba-mriwarp` from your home directory. Note that this may remove warping results.
+    1. Clone voluba-mriwarp from GitHub
+
+        ```bash
+        git clone https://github.com/FZJ-INM1-BDA/voluba-mriwarp.git
+        ```
+
+    1. Create a virtual environment
+
+        ```bash
+        cd voluba-mriwarp
+        python -m venv venv
+        source venv/bin/activate
+        ```
+
+    1. Install all Python requirements with pip
+
+        ```bash
+        pip install -r requirements.txt
+        ```
+
+    1. Run voluba-mriwarp:
+
+        ```bash
+        python start_app.py
+        ```

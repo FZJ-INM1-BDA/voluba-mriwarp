@@ -1,4 +1,4 @@
-site_name: voluba-mriwarp User Documentation
+site_name: voluba-mriwarp Developer Documentation
 
 repo_url: 'https://github.com/FZJ-INM1-BDA/voluba-mriwarp'
 repo_name: 'GitHub'
@@ -6,8 +6,12 @@ repo_name: 'GitHub'
 copyright: '© 2023, Forschungszentrum Juelich GmbH'
 
 theme:
-  name: readthedocs
+  name: material
   logo: 'images/voluba-mriwarp.png'
+  features:
+    - content.code.copy
+  palette:
+    primary: white
 
 extra_css:
   - extra.css
@@ -17,23 +21,30 @@ docs_dir: docs
 markdown_extensions:
   - admonition
   - attr_list
-  - fontawesome_markdown
+  - def_list
   - footnotes
-  - codehilite:
-      use_pygments: False
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      linenums: true
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+
 
 nav:
-  - About voluba-mriwarp: 'index.md'
+  - 'index.md'
   - 'installation.md'
+  - 'implementation_details.md'
+  - 'build.md'
+  - 'deployment.md'
   - 'acknowledgement.md'
-  - Usage:
-    - 'workflow.md'
-    - 'viewer.md'
-    - 'warping.md'
-    - 'analysis.md'
-  - Tutorials:
-      - 'tutorial.md'
-      - 'video_tutorial.md'
-  - Contact us:
-      - Support: 'mailto:support@ebrains.eu?subject=[voluba-mriwarp]'
-      - GitHub Issues: 'https://github.com/FZJ-INM1-BDA/voluba-mriwarp/issues'
