@@ -21,7 +21,7 @@ Probabilistic region assignment can only be performed if a transformation from t
 The [General settings](#general-settings) allow you to adjust the details of the probabilistic assignment like the parcellation or point uncertainty.
 
 ![icon](images/5.png) **Select a point in subject's space to analyze it**.  
-There are two ways to choose points. In the [interactive viewer](#viewer) you can select a point by double clicking a location in the input scan. Secondly, you can manually type in a coordinate in the first row of the <mark>Points</mark> table. _voluba-mriwarp_ will then assign brain regions to this point and display the results in the side panel. For more information about the tables, see the section on [Point selection](#point-selection) and [Results of the analysis](#results-of-the-analysis).
+There are two ways to choose points. In the [interactive viewer](viewer.md) you can select a point by double clicking a location in the input scan. Secondly, you can manually type in a coordinate in the first row of the <mark>Points</mark> table. _voluba-mriwarp_ will then assign brain regions to this point and display the results in the side panel. For more information about the tables, see the section on [Point selection](#point-selection) and [Results of the analysis](#results-of-the-analysis).
 
 ![icon](images/6.png) **Get a quick overview about a specific region in siibra-explorer.**  
 Double click a row in the assignment table to quickly view more information about the brain region in [siibra-explorer](https://atlases.ebrains.eu/viewer/human). Interactively explore brain connectivity and multimodal data features like transmitter receptor densities, cell distributions, and physiological recordings linked to this area.
