@@ -1,6 +1,6 @@
 # Step-by-step example
 
-In this tutorial, you will warp an example MRI scan to [MNI ICBM 152 2009c Nonlinear Asymmetric space]((https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009)) and analyze a point of the input space in the detailed anatomical context of the [EBRAINS Human Brain Atlas]((https://www.ebrains.eu/tools/human-brain-atlas)). 
+In this tutorial, you will warp an example MRI scan to [MNI ICBM 152 2009c Nonlinear Asymmetric space](https://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009) and analyze a point of the input space in the detailed anatomical context of the [EBRAINS Human Brain Atlas](https://www.ebrains.eu/tools/human-brain-atlas). 
 
 ## Get the example dataset
 
